@@ -1,0 +1,94 @@
+/**
+ * index.css — Diseño Compacto & Refinado (Efecto Zoom 90%)
+ */
+@import "tailwindcss";
+
+@theme {
+  --color-paradise-50: #f8fafc;
+  --color-paradise-100: #f1f5f9;
+  --color-paradise-200: #e2e8f0;
+  --color-paradise-300: #cbd5e1;
+  --color-paradise-400: #94a3b8;
+  --color-paradise-500: #64748b;
+  --color-paradise-600: #475569;
+  --color-paradise-700: #334155;
+  --color-paradise-800: #1e293b;
+  --color-paradise-900: #0f172a;
+  --color-paradise-950: #020617; /* Deep Navy Black */
+
+  --color-accent-400: #10b981; /* Emerald */
+  --color-accent-500: #059669; /* Rich Emerald */
+  --color-accent-600: #047857;
+}
+
+@layer base {
+  /* CAMBIO A TAMAÑO COMPACTO (90%) */
+  html {
+    font-size: 14.5px; /* Reducción para el efecto zoom 90% */
+    background-color: var(--color-paradise-950);
+    color: var(--color-paradise-50);
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-paradise-950/40 backdrop-blur-xl border border-white/5;
+  }
+
+  .glass-card {
+    @apply bg-paradise-900/20 backdrop-blur-md border border-white/5 hover:border-accent-500/20 transition-all duration-500;
+  }
+
+  .btn-primary {
+    @apply bg-accent-500 hover:bg-accent-600 text-white font-black uppercase tracking-[0.2em] rounded-full transition-all active:scale-95 shadow-lg shadow-accent-500/20;
+  }
+
+  .btn-primary-outline {
+    @apply border-2 border-accent-500/30 text-accent-400 font-black uppercase tracking-[0.2em] rounded-full hover:bg-accent-500 hover:text-white transition-all;
+  }
+
+  .heading-display {
+    @apply font-black tracking-tighter leading-[0.9] text-white;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-accent-400 to-accent-500;
+  }
+
+  .text-emerald-glow {
+    @apply text-accent-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)];
+  }
+
+  .shadow-emerald-glow {
+    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.2);
+  }
+}
+
+/* Scrollbar Custom */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paradise-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-paradise-800);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-500/40);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
