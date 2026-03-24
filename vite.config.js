@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  base: '/Paradise-Premium/',
   server: {
     port: 5173,
     open: true,
