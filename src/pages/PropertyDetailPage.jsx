@@ -16,7 +16,7 @@ const DEMO_PROPS = {
     desc: 'Vive la experiencia definitiva en el corazón de Provenza. Este penthouse de diseño minimalista ofrece vistas panorámicas de la ciudad, acabados en mármol y acceso privado.',
     images: [
       'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600607687940-4e524cb35201?auto=format&fit=crop&w=1200&q=80'
+      'https://images.unsplash.com/photo-1541123351-ad3ad22b314d?auto=format&fit=crop&w=1200&q=80'
     ],
     features: ['3 Alcobas', '4 Baños', '280 m²'],
     amenities: ['Jacuzzi Privado', 'Seguridad 24/7', 'Gimnasio', 'Piscina']
@@ -27,7 +27,7 @@ const DEMO_PROPS = {
     location: 'Laureles, Medellín',
     desc: 'Un espacio moderno y funcional en el barrio más tradicional de Medellín. Perfecto para nómadas digitales y parejas que buscan estilo y comodidad.',
     images: [
-      'https://images.unsplash.com/photo-1600607687940-4e524cb35201?auto=format&fit=crop&w=1200&q=80'
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80'
     ],
     features: ['1 Alcoba', '1 Baño', '65 m²'],
     amenities: ['Fibra Óptica', 'Balcón', 'Cocina Integral', 'Lavandería']
