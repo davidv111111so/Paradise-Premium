@@ -13,7 +13,7 @@ export default function PublishPage() {
     price: '',
     location: '',
     description: '',
-    category: 'apartment', // Selector de categoría añadido
+    category: 'apartment',
     videoUrl: '',
     beds: '',
     baths: '',
@@ -36,21 +36,45 @@ export default function PublishPage() {
     { id: 'vehicle', label: t.nav_vehicles, icon: Ship },
   ];
 
+  const AUTHORIZED_EMAILS = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
+  const [loading, setLoading] = useState(false);
+
+  const handlePublish = async () => {
+    const userEmail = 'marlon@paradise.com'; // Placeholder
+
+    if (!AUTHORIZED_EMAILS.includes(userEmail)) {
+      alert(lang === 'es' ? 'Solo Marlon, Andrea y Gustavo pueden publicar.' : 'Only Marlon, Andrea, and Gustavo can publish.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Logic for supabase insertion would go here
+      alert(lang === 'es' ? '¡Propiedad publicada con éxito!' : 'Property published successfully!');
+    } catch (error) {
+      console.error(error);
+      alert(lang === 'es' ? 'Error al publicar.' : 'Error publishing.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 md:p-10 animate-fade-in max-w-5xl mx-auto pb-40">
       <div className="mb-10 text-center">
         <h1 className="heading-display text-4xl text-paradise-50 mb-3">
-          {lang === 'es' ? 'Publicar una Nueva' : 'Publish a New'} <span className="text-gradient">{lang === 'es' ? 'Propiedad' : 'Property'}</span>
+          {lang === 'es' ? 'Publicar una Nueva' : 'Publish a New'} <span className="text-emerald-glow">{lang === 'es' ? 'Propiedad' : 'Property'}</span>
         </h1>
-        <p className="text-paradise-400 font-medium">Completa todos los detalles para que Andrea y Gustavo aprueben el anuncio.</p>
+        <p className="text-paradise-400 font-medium">
+          {lang === 'es' ? 'Acceso exclusivo para Marlon, Andrea y Gustavo.' : 'Exclusive access for Marlon, Andrea, and Gustavo.'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
           
-          {/* CATEGORY SELECTOR */}
-          <section className="glass-card p-8 rounded-3xl border-accent-500/20">
-             <h3 className="text-xs font-black text-accent-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+             <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                <Plus size={16} /> 1. {lang === 'es' ? 'Selecciona Categoría' : 'Select Category'}
              </h3>
              <div className="grid grid-cols-3 gap-4">
@@ -60,7 +84,7 @@ export default function PublishPage() {
                     onClick={() => setFormData({...formData, category: cat.id})}
                     className={`flex flex-col items-center gap-3 p-6 rounded-2xl border transition-all ${
                       formData.category === cat.id 
-                      ? 'bg-accent-500/20 border-accent-500 text-accent-400' 
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
                       : 'bg-paradise-900/50 border-paradise-800 text-paradise-500 hover:border-paradise-700'
                     }`}
                   >
@@ -71,8 +95,8 @@ export default function PublishPage() {
              </div>
           </section>
 
-          <section className="glass-card p-8 rounded-3xl border-accent-500/20">
-            <h3 className="text-xs font-black text-accent-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <Camera size={16} /> 2. {lang === 'es' ? 'Galería de Imágenes' : 'Image Gallery'}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
@@ -84,16 +108,16 @@ export default function PublishPage() {
                   </button>
                 </div>
               ))}
-              <label className="aspect-square rounded-2xl border-2 border-dashed border-paradise-800 hover:border-accent-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-paradise-900/30 group">
-                <Plus size={24} className="text-paradise-600 group-hover:text-accent-500" />
-                <span className="text-[10px] font-bold text-paradise-600 group-hover:text-accent-500 uppercase">Subir Foto</span>
+              <label className="aspect-square rounded-2xl border-2 border-dashed border-paradise-800 hover:border-emerald-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-paradise-900/30 group">
+                <Plus size={24} className="text-paradise-600 group-hover:text-emerald-500" />
+                <span className="text-[10px] font-bold text-paradise-600 group-hover:text-emerald-500 uppercase">Subir Foto</span>
                 <input type="file" multiple className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
           </section>
 
-          <section className="glass-card p-8 rounded-3xl border-accent-500/20">
-            <h3 className="text-xs font-black text-accent-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <MapPin size={16} /> 3. {lang === 'es' ? 'Información General' : 'General Information'}
             </h3>
             <div className="space-y-6">
@@ -108,15 +132,19 @@ export default function PublishPage() {
         </div>
 
         <div className="space-y-8">
-          <section className="glass-card p-8 rounded-3xl border-accent-500/20">
-            <h3 className="text-xs font-black text-accent-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <Video size={16} /> {lang === 'es' ? 'Link de Video' : 'Video Link'}
             </h3>
             <input type="text" placeholder="YouTube or Vimeo URL" className="input-field" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} />
           </section>
           
-          <button className="w-full btn-primary py-5 text-sm uppercase tracking-[0.2em] font-black shadow-accent-500/20 shadow-2xl">
-            {lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing'}
+          <button 
+            onClick={handlePublish}
+            disabled={loading}
+            className="w-full btn-primary py-5 text-sm uppercase tracking-[0.2em] font-black shadow-emerald-500/20 shadow-2xl disabled:opacity-50"
+          >
+            {loading ? (lang === 'es' ? 'Publicando...' : 'Publishing...') : (lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing')}
           </button>
         </div>
       </div>

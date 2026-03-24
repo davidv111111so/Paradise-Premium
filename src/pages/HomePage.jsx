@@ -13,7 +13,7 @@ const CATEGORIES = [
 const RECENT_PROPERTIES = [
   {
     id: 1,
-    title: 'Penthouse Provenza Luxury',
+    title: '(X) Penthouse Provenza Luxury',
     price: '12.000.000',
     location: 'El Poblado',
     img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
@@ -21,7 +21,7 @@ const RECENT_PROPERTIES = [
   },
   {
     id: 2,
-    title: 'Minimalist Loft Laureles',
+    title: '(X) Minimalist Loft Laureles',
     price: '4.500.000',
     location: 'Laureles',
     img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',

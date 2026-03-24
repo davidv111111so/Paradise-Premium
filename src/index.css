@@ -22,12 +22,12 @@
   --color-accent-500: #059669; /* Rich Emerald */
   --color-accent-600: #047857;
 
-  /* Orange / Gold tones */
-  --color-orange-300: #fdba74;
-  --color-orange-400: #fb923c;
-  --color-orange-500: #f97316;
-  --color-orange-600: #ea580c;
-  --color-orange-700: #c2410c;
+  /* Emerald Green brand tones (replacing orange) */
+  --color-orange-300: #6ee7b7;
+  --color-orange-400: #34d399;
+  --color-orange-500: #10b981;
+  --color-orange-600: #059669;
+  --color-orange-700: #047857;
 
   --color-gold-300: #fcd34d;
   --color-gold-400: #fbbf24;
@@ -61,12 +61,12 @@
 
   /* Premium buttons with orange glow */
   .btn-primary {
-    @apply bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold uppercase tracking-[0.15em] rounded-full transition-all active:scale-95 shadow-lg;
+    @apply bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold uppercase tracking-[0.15em] rounded-full transition-all active:scale-95 shadow-lg;
     font-family: var(--font-sans);
-    box-shadow: 0 6px 30px -6px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 6px 30px -6px rgba(16, 185, 129, 0.4);
   }
   .btn-primary:hover {
-    box-shadow: 0 8px 40px -4px rgba(249, 115, 22, 0.55);
+    box-shadow: 0 8px 40px -4px rgba(16, 185, 129, 0.55);
   }
 
   .btn-primary-outline {
@@ -75,12 +75,12 @@
   }
 
   .btn-elegant {
-    @apply bg-gradient-to-r from-orange-500 via-orange-400 to-gold-400 text-paradise-950 font-bold uppercase tracking-[0.18em] rounded-full transition-all active:scale-95;
+    @apply bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 text-paradise-950 font-bold uppercase tracking-[0.18em] rounded-full transition-all active:scale-95;
     font-family: var(--font-sans);
-    box-shadow: 0 6px 30px -6px rgba(249, 115, 22, 0.35);
+    box-shadow: 0 6px 30px -6px rgba(16, 185, 129, 0.35);
   }
   .btn-elegant:hover {
-    box-shadow: 0 10px 45px -4px rgba(249, 115, 22, 0.5);
+    box-shadow: 0 10px 45px -4px rgba(16, 185, 129, 0.5);
     transform: translateY(-1px);
   }
 
@@ -93,7 +93,7 @@
   .heading-orange {
     font-family: var(--font-serif);
     @apply font-extrabold tracking-tight;
-    background: linear-gradient(135deg, #fb923c 0%, #f97316 40%, #fbbf24 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 40%, #fbbf24 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
