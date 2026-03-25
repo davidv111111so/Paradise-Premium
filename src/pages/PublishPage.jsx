@@ -24,19 +24,27 @@ export default function PublishPage() {
   const AVAILABLE_AMENITIES = [
     'Piscina', 'Jacuzzi Privado', 'Gimnasio', 'Seguridad 24/7',
     'Smart Home', 'Terraza 360°', 'Balcón', 'Cocina Integral',
-    'Fibra Óptica', 'Lavandería', 'Zona BBQ', 'Aire Acondicionado'
+    'Fibra Óptica', 'Lavandería', 'Zona BBQ', 'Aire Acondicionado',
+    'Parqueadero Privado', 'Ascensor', 'Canchas Deportivas', 'Sauna / Turco',
+    'Pet Friendly', 'Sala de Cine', 'Coworking', 'Vista a la Ciudad'
   ];
+
+  const [otherAmenity, setOtherAmenity] = useState('');
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    // Para modo demo guardaremos blob urls o placeholders
-    // Pero como localStorage falla con blobs largos si son muchos, vamos a mockear la imagen por ahora
-    const mockImages = files.map(() => 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80');
-    setImages([...images, ...mockImages]);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const CATEGORIES = [
@@ -153,7 +161,7 @@ export default function PublishPage() {
                 <input type="file" multiple className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
-            <p className="text-xs text-paradise-500">Nota: Al estar en modo demo, las fotos se simularán para evitar límites de memoria del navegador.</p>
+            <p className="text-xs text-paradise-500">Nota: Las fotos se guardan en alta resolución para una experiencia premium.</p>
           </section>
 
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
@@ -207,6 +215,30 @@ export default function PublishPage() {
                     <span className="text-paradise-200 text-sm font-medium">{am}</span>
                  </label>
                ))}
+               <div className="flex flex-col gap-2 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                  <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">{lang === 'es' ? 'Otro' : 'Other'}</span>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Ej: Helipuerto" 
+                      className="bg-transparent border-b border-emerald-500/30 text-white text-sm outline-none w-full" 
+                      value={otherAmenity}
+                      onChange={e => setOtherAmenity(e.target.value)}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (otherAmenity.trim()) {
+                          toggleAmenity(otherAmenity.trim());
+                          setOtherAmenity('');
+                        }
+                      }}
+                      className="p-1 bg-emerald-500 rounded-lg text-white"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+               </div>
             </div>
           </section>
         </div>

@@ -29,10 +29,11 @@ export default function AICopilotBubble() {
         return;
       }
 
-      const prompt = `Eres el Copiloto de Paradise Premium Rentals en Medellín. 
-      Ayuda al usuario a encontrar propiedades de alquiler. 
-      Pregunta por: barrio (Poblado, Laureles, Envigado), presupuesto (mensual entre 2M y 12M COP) y tipo de propiedad.
-      Usuario dice: "${input}"`;
+      const prompt = `Eres el Asistente de Servicio al Cliente de Paradise Premium Rentals. 
+      Tu objetivo es ayudar de forma amable y directa. 
+      Si preguntan por propiedades, dile que pueden verlas en el menú superior o que puedes contactarlos con Andrea o Gustavo.
+      Sé conciso, profesional y servicial. No uses tecnicismos.
+      Usuario: "${input}"`;
 
       const result = await geminiModel.generateContent(prompt);
       const response = await result.response;

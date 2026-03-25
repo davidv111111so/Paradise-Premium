@@ -1,6 +1,8 @@
 import { Building2, Home, Ship } from 'lucide-react';
+import { supabase } from './supabase';
 
 const INITIAL_PROPERTIES = [
+  // ... (keeping current initial properties)
   {
     id: '1',
     title: 'Penthouse Provenza Luxury',
@@ -108,23 +110,38 @@ export const getProperties = () => {
 
 export const getProperty = (id) => {
   const all = getProperties();
-  return all.find(p => p.id === String(id));
+  return all.find(p => String(p.id) === String(id));
 };
 
 export const addProperty = (prop) => {
   const all = getProperties();
   const newProp = {
     ...prop,
-    id: Math.random().toString(36).substring(2, 9),
+    id: Date.now().toString(), // Improved ID generation
     created_at: new Date().toISOString()
   };
-  localStorage.setItem('paradise_properties', JSON.stringify([newProp, ...all]));
+  
+  const updated = [newProp, ...all];
+  localStorage.setItem('paradise_properties', JSON.stringify(updated));
+  
+  // Async Sync to Supabase for "Cloud Persistence"
+  // (Note: This assumes a 'properties' table exists)
+  supabase.from('properties').insert([newProp]).then(({ error }) => {
+    if (error) console.warn('Supabase backup failed:', error.message);
+  });
+
   return newProp;
 };
 
 export const removeProperty = (id) => {
   const all = getProperties();
-  const updated = all.filter(p => p.id !== String(id));
+  const updated = all.filter(p => String(p.id) !== String(id));
   localStorage.setItem('paradise_properties', JSON.stringify(updated));
+  
+  // Async Sync to Supabase
+  supabase.from('properties').delete().eq('id', id).then(({ error }) => {
+    if (error) console.warn('Supabase delete sync failed:', error.message);
+  });
+
   return updated;
 };

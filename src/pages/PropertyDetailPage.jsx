@@ -5,18 +5,30 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   MapPin, Bed, Bath, Maximize, CheckCircle, 
   MessageCircle, Phone, Star, ChevronLeft, 
-  Wifi, Car, Tv, Wind, Coffee
+  Wifi, Car, Tv, Wind, Coffee, Plus, X, ChevronRight, Loader2
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 import { getProperty } from '../lib/store';
 export default function PropertyDetailPage() {
   const { id } = useParams();
-  const property = getProperty(id);
+  const [property, setProperty] = useState(null);
+  const [activeImage, setActiveImage] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const { lang, t } = useOutletContext();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const p = getProperty(id);
+    if (p) setProperty(p);
+  }, [id]);
 
   if (!property) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-bold text-paradise-50">Propiedad no encontrada</h2>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-paradise-950 animate-fade-in">
+        <Loader2 className="animate-spin text-emerald-500 mb-4" size={48} />
+        <h2 className="text-2xl font-bold text-paradise-50">Cargando Propiedad...</h2>
         <Link to="/" className="text-emerald-500 mt-4 hover:underline">Volver al inicio</Link>
       </div>
     );
@@ -32,21 +44,33 @@ export default function PropertyDetailPage() {
   return (
     <div className="animate-fade-in pb-20 bg-paradise-950 min-h-screen">
       {/* Header / Nav Back */}
-      <div className="sticky top-20 z-40 px-6 py-4 flex gap-4">
-        <Link to="/" className="glass-card p-3 rounded-full text-emerald-400 hover:scale-110 transition-transform">
+      <div className="absolute top-28 left-6 md:left-12 z-40">
+        <Link to="/" className="glass-card p-4 rounded-full text-emerald-400 hover:scale-110 transition-transform bg-paradise-900/50 backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl">
           <ChevronLeft size={24} />
         </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] mb-12 rounded-[40px] overflow-hidden shadow-2xl">
-           <img src={property.images?.[0] || '/placeholder.jpg'} alt="Prop" className="w-full h-full object-cover" />
+      <div className="max-w-7xl mx-auto px-6 pt-12">
+        {/* Gallery Grid */}
+        <div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[600px] mb-12 rounded-[40px] overflow-hidden shadow-2xl cursor-pointer group"
+          onClick={() => setIsGalleryOpen(true)}
+        >
+           <div className="relative h-full overflow-hidden">
+             <img src={property.images?.[0] || '/placeholder.jpg'} alt="Prop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+             <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+           </div>
            <div className="hidden md:grid grid-rows-2 gap-4">
-              <img src={property.images?.[1] || property.images?.[0]} alt="Prop" className="w-full h-full object-cover" />
-              <div className="relative">
-                <img src={property.images?.[2] || property.images?.[0]} alt="Prop" className="w-full h-full object-cover brightness-50" />
-                <div className="absolute inset-0 flex items-center justify-center text-white font-black text-xl">+ {property.images?.length || 0} Fotos</div>
+              <div className="relative h-full overflow-hidden rounded-tr-[40px]">
+                <img src={property.images?.[1] || property.images?.[0]} alt="Prop" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+              </div>
+              <div className="relative h-full overflow-hidden rounded-br-[40px]">
+                <img src={property.images?.[2] || property.images?.[0]} alt="Prop" className="w-full h-full object-cover brightness-50 transition-transform duration-700 hover:scale-105" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white font-black text-2xl uppercase tracking-widest gap-2">
+                   <Plus size={32} />
+                   <span>Ver Galería</span>
+                   <span className="text-xs font-bold text-white/60">({property.images?.length || 0} FOTOS)</span>
+                </div>
               </div>
            </div>
         </div>
@@ -119,20 +143,43 @@ export default function PropertyDetailPage() {
                </div>
 
                <div className="space-y-4">
-                 <button className="w-full btn-elegant py-5 rounded-3xl flex items-center justify-center gap-3 text-sm">
-                   <MessageCircle size={20} /> Contactar Agente
-                 </button>
-                 <button className="w-full bg-white/5 hover:bg-white/10 text-paradise-200 py-5 rounded-3xl flex items-center justify-center gap-3 text-sm border border-white/5 transition-all">
-                   <Phone size={20} /> Llamar ahora
-                 </button>
+                 {/* Lead Rotation Logic: Alternate between Andrea and Gustavo */}
+                 {(() => {
+                   const isAndrea = Math.random() > 0.5;
+                   const name = isAndrea ? 'Andrea' : 'Gustavo';
+                   const phone = isAndrea ? '573043399492' : '573104507952';
+                   const shortPhone = isAndrea ? '+57 304 3399492' : '+57 310 4507952';
+                   
+                   return (
+                     <>
+                       <a 
+                         href={`https://wa.me/${phone}?text=${encodeURIComponent(`Hola ${name}, estoy interesado en la propiedad: ${property.title}. ¿Podrían darme más información?`)}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="w-full btn-emerald py-5 rounded-3xl flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest no-underline"
+                       >
+                         <MessageCircle size={20} /> Contactar Agente
+                       </a>
+                       <a 
+                         href={`tel:${phone}`}
+                         className="w-full bg-white/5 hover:bg-white/10 text-paradise-200 py-5 rounded-3xl flex items-center justify-center gap-3 text-sm border border-white/5 transition-all no-underline font-bold uppercase tracking-widest"
+                       >
+                         <Phone size={20} /> Llamar a {name}
+                       </a>
+                     </>
+                   );
+                 })()}
                </div>
 
                <div className="mt-8 pt-8 border-t border-white/5">
                  <div className="flex items-center gap-4">
-                    <img src="https://i.pravatar.cc/150?u=andrea" className="w-12 h-12 rounded-full border-2 border-emerald-500/30" />
+                    <div className="flex -space-x-3">
+                      <img src="https://i.pravatar.cc/150?u=andrea1" className="w-10 h-10 rounded-full border-2 border-paradise-900" />
+                      <img src="https://i.pravatar.cc/150?u=gustavo1" className="w-10 h-10 rounded-full border-2 border-paradise-900" />
+                    </div>
                     <div>
-                      <p className="text-paradise-50 font-bold">Andrea & Gustavo</p>
-                      <p className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Paradise Agents</p>
+                      <p className="text-paradise-50 font-bold text-xs">Andrea & Gustavo</p>
+                      <p className="text-[9px] text-emerald-400 font-black uppercase tracking-widest">SOCIOS FUNDADORES</p>
                     </div>
                  </div>
                </div>
@@ -140,6 +187,58 @@ export default function PropertyDetailPage() {
           </div>
         </div>
       </div>
+      {/* Full Gallery Modal / Carousel */}
+      {isGalleryOpen && (
+        <div className="fixed inset-0 z-[200] bg-paradise-950 flex flex-col animate-fade-in">
+           <div className="p-6 flex items-center justify-between border-b border-white/5">
+              <h2 className="text-paradise-50 font-bold uppercase tracking-widest text-sm">Galería de Imágenes</h2>
+              <button 
+                onClick={() => setIsGalleryOpen(false)}
+                className="p-3 bg-white/5 rounded-full text-paradise-400 hover:text-white"
+              >
+                <X size={24} />
+              </button>
+           </div>
+           
+           <div className="flex-1 relative flex items-center justify-center p-4">
+              <img 
+                src={property.images?.[activeImage]} 
+                alt="Fullscreen"
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+              />
+              
+              <button 
+                onClick={() => setActiveImage((prev) => (prev === 0 ? property.images.length - 1 : prev - 1))}
+                className="absolute left-6 md:left-12 p-5 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-emerald-500 transition-all shadow-2xl"
+              >
+                <ChevronLeft size={32} />
+              </button>
+              
+              <button 
+                onClick={() => setActiveImage((prev) => (prev === property.images.length - 1 ? 0 : prev + 1))}
+                className="absolute right-6 md:right-12 p-5 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-emerald-500 transition-all shadow-2xl"
+              >
+                <ChevronRight size={32} />
+              </button>
+           </div>
+
+           <div className="p-6 bg-paradise-950/50 border-t border-white/5 overflow-x-auto">
+              <div className="flex gap-4 min-w-max mx-auto justify-center">
+                 {property.images.map((img, idx) => (
+                   <button 
+                     key={idx}
+                     onClick={() => setActiveImage(idx)}
+                     className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                       activeImage === idx ? 'border-emerald-500 scale-105 shadow-emerald-500/20 shadow-xl' : 'border-transparent opacity-50 grayscale'
+                     }`}
+                   >
+                     <img src={img} className="w-full h-full object-cover" />
+                   </button>
+                 ))}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
