@@ -20,12 +20,16 @@ export default function AICenterPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkRole() {
-      // Demo mode: Siempre admin
-      setIsAdmin(true); 
+    const userEmail = prompt('Centro IA - Acceso Restringido\nIngrese su correo de socio para autorizar:');
+    const AUTHORIZED = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
+    
+    if (AUTHORIZED.includes(userEmail)) {
+      setIsAdmin(true);
       setLoading(false);
+    } else {
+      alert('Solo Marlon, Andrea y Gustavo pueden acceder al Centro IA.');
+      window.location.href = '/';
     }
-    checkRole();
   }, []);
 
   const TABS = [

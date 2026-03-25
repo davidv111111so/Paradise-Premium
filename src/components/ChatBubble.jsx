@@ -25,7 +25,7 @@ export default function ChatBubble({ message, isAI = false }) {
             : 'bg-accent-500/15 text-paradise-100 rounded-tr-sm border border-accent-500/10'
         }`}
       >
-        {message}
+        {typeof message === 'object' ? message.content : message}
       </div>
     </div>
   );

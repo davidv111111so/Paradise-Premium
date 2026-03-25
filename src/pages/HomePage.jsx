@@ -93,13 +93,13 @@ export default function HomePage() {
           {/* MÉTRICAS */}
           <div className="lg:col-span-2 flex flex-col gap-12 items-end lg:pr-12">
             <div className="text-right">
-               <p className="text-7xl font-black text-emerald-glow mb-1 tracking-tighter" style={{ color: '#10b981', textShadow: '0 0 30px rgba(16,185,129,0.3)' }}>50+</p>
-               <p className="text-[11px] text-paradise-300 font-bold uppercase tracking-[0.4em] opacity-80">{lang === 'es' ? 'Propiedades Premium' : 'Premium Properties'}</p>
+               <p className="text-7xl font-black text-emerald-glow mb-1 tracking-tighter" style={{ color: '#10b981', textShadow: '0 0 30px rgba(16,185,129,0.3)' }}>200+</p>
+               <p className="text-[11px] text-paradise-300 font-bold uppercase tracking-[0.4em] opacity-80">{lang === 'es' ? 'Clientes Satisfechos' : 'Satisfied Clients'}</p>
             </div>
             
             <div className="text-right translate-x-[-20%]">
                <p className="text-7xl font-black text-paradise-50 mb-1 tracking-tighter">98%</p>
-               <p className="text-[11px] text-emerald-400/70 font-bold uppercase tracking-[0.4em] opacity-80">{lang === 'es' ? 'Satisfacción' : 'Satisfaction'}</p>
+               <p className="text-[11px] text-emerald-400/70 font-bold uppercase tracking-[0.4em] opacity-80">{lang === 'es' ? 'Luxury Score' : 'Luxury Score'}</p>
             </div>
 
             <div className="text-right">

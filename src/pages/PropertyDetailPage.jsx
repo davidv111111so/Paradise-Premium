@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import { getProperty } from '../lib/store';
+
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
@@ -45,8 +46,8 @@ export default function PropertyDetailPage() {
     <div className="animate-fade-in pb-20 bg-paradise-950 min-h-screen">
       {/* Header / Nav Back */}
       <div className="absolute top-28 left-6 md:left-12 z-40">
-        <Link to="/" className="glass-card p-4 rounded-full text-emerald-400 hover:scale-110 transition-transform bg-paradise-900/50 backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl">
-          <ChevronLeft size={24} />
+        <Link to="/" className="glass-card p-4 rounded-full text-emerald-400 hover:scale-110 transition-transform bg-paradise-900/50 backdrop-blur-xl border border-emerald-500/20 flex items-center justify-center shadow-2xl group">
+          <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
         </Link>
       </div>
 
@@ -143,32 +144,77 @@ export default function PropertyDetailPage() {
                </div>
 
                <div className="space-y-4">
-                 {/* Lead Rotation Logic: Alternate between Andrea and Gustavo */}
-                 {(() => {
-                   const isAndrea = Math.random() > 0.5;
-                   const name = isAndrea ? 'Andrea' : 'Gustavo';
-                   const phone = isAndrea ? '573043399492' : '573104507952';
-                   const shortPhone = isAndrea ? '+57 304 3399492' : '+57 310 4507952';
-                   
-                   return (
-                     <>
+                 <p className="text-[10px] text-paradise-400 font-bold uppercase tracking-widest text-center mb-2">
+                   {lang === 'es' ? 'Contacta a un Socio' : 'Contact a Partner'}
+                 </p>
+                 
+                 <div className="grid grid-cols-1 gap-3">
+                   {/* Andrea Contact */}
+                   <div className="glass-card p-4 rounded-3xl border-white/5 bg-white/5 space-y-3">
+                     <div className="flex items-center gap-3">
+                       <img src="https://i.pravatar.cc/150?u=andrea1" className="w-10 h-10 rounded-full border border-emerald-500/30" />
+                       <div>
+                         <p className="text-paradise-50 font-bold text-sm">Andrea</p>
+                         <p className="text-[8px] text-emerald-400 font-black uppercase tracking-widest">Socia Fundadora</p>
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-2 gap-2">
                        <a 
-                         href={`https://wa.me/${phone}?text=${encodeURIComponent(`Hola ${name}, estoy interesado en la propiedad: ${property.title}. ¿Podrían darme más información?`)}`}
+                         href={`https://wa.me/573043399492?text=${encodeURIComponent(`Hola Andrea, estoy interesado en la propiedad: ${property.title}.`)}`}
                          target="_blank"
                          rel="noopener noreferrer"
-                         className="w-full btn-emerald py-5 rounded-3xl flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest no-underline"
+                         className="flex items-center justify-center gap-2 p-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-[10px] font-black uppercase transition-all"
                        >
-                         <MessageCircle size={20} /> Contactar Agente
+                         <MessageCircle size={14} /> WhatsApp
                        </a>
                        <a 
-                         href={`tel:${phone}`}
-                         className="w-full bg-white/5 hover:bg-white/10 text-paradise-200 py-5 rounded-3xl flex items-center justify-center gap-3 text-sm border border-white/5 transition-all no-underline font-bold uppercase tracking-widest"
+                         href="tel:573043399492"
+                         className="flex items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-paradise-300 rounded-xl text-[10px] font-black uppercase transition-all"
                        >
-                         <Phone size={20} /> Llamar a {name}
+                         <Phone size={14} /> Llamar
                        </a>
-                     </>
-                   );
-                 })()}
+                     </div>
+                   </div>
+
+                   {/* Gustavo Contact */}
+                   <div className="glass-card p-4 rounded-3xl border-white/5 bg-white/5 space-y-3">
+                     <div className="flex items-center gap-3">
+                       <img src="https://i.pravatar.cc/150?u=gustavo1" className="w-10 h-10 rounded-full border border-emerald-500/30" />
+                       <div>
+                         <p className="text-paradise-50 font-bold text-sm">Gustavo</p>
+                         <p className="text-[8px] text-emerald-400 font-black uppercase tracking-widest">Socio Fundador</p>
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-2 gap-2">
+                       <a 
+                         href={`https://wa.me/573104507952?text=${encodeURIComponent(`Hola Gustavo, estoy interesado en la propiedad: ${property.title}.`)}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="flex items-center justify-center gap-2 p-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-[10px] font-black uppercase transition-all"
+                       >
+                         <MessageCircle size={14} /> WhatsApp
+                       </a>
+                       <a 
+                         href="tel:573104507952"
+                         className="flex items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-paradise-300 rounded-xl text-[10px] font-black uppercase transition-all"
+                       >
+                         <Phone size={14} /> Llamar
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Video Link if exists */}
+                 {property.videoUrl && (
+                   <a 
+                     href={property.videoUrl} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="w-full flex items-center justify-center gap-3 p-5 bg-paradise-50 text-paradise-950 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-white/5"
+                   >
+                     <Video size={18} /> Ver Video Tour
+                   </a>
+                 )}
                </div>
 
                <div className="mt-8 pt-8 border-t border-white/5">
@@ -191,7 +237,13 @@ export default function PropertyDetailPage() {
       {isGalleryOpen && (
         <div className="fixed inset-0 z-[200] bg-paradise-950 flex flex-col animate-fade-in">
            <div className="p-6 flex items-center justify-between border-b border-white/5">
-              <h2 className="text-paradise-50 font-bold uppercase tracking-widest text-sm">Galería de Imágenes</h2>
+              <button 
+                onClick={() => setIsGalleryOpen(false)}
+                className="flex items-center gap-3 text-paradise-400 hover:text-emerald-400 transition-colors group"
+              >
+                <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="text-paradise-50 font-bold uppercase tracking-widest text-sm">Volver al Detalle</span>
+              </button>
               <button 
                 onClick={() => setIsGalleryOpen(false)}
                 className="p-3 bg-white/5 rounded-full text-paradise-400 hover:text-white"

@@ -57,16 +57,18 @@ export default function PublishPage() {
   const [loading, setLoading] = useState(false);
 
   const toggleAmenity = (am) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(am)
-        ? prev.amenities.filter(a => a !== am)
-        : [...prev.amenities, am]
-    }));
+    setFormData(prev => {
+      const isIncluded = prev.amenities.includes(am);
+      return {
+        ...prev,
+        amenities: isIncluded
+          ? prev.amenities.filter(a => a !== am)
+          : [...prev.amenities, am]
+      };
+    });
   };
 
   const handlePublish = async () => {
-    // In production, this would come from Auth Context
     const userEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar:' : 'Enter partner email to authorize:');
 
     if (!AUTHORIZED_EMAILS.includes(userEmail)) {
@@ -179,19 +181,19 @@ export default function PublishPage() {
                 <div>
                   <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Habitaciones' : 'Beds'}</label>
                   <select className="input-field" value={formData.bedrooms} onChange={e => setFormData({...formData, bedrooms: e.target.value})}>
-                     {[0,1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
+                     {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Baños' : 'Baths'}</label>
                   <select className="input-field" value={formData.bathrooms} onChange={e => setFormData({...formData, bathrooms: e.target.value})}>
-                     {[0,1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
+                     {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Capacidad' : 'Capacity'}</label>
                   <select className="input-field" value={formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value})}>
-                     {[2,4,6,8,10,12,15,20].map(n => <option key={n} value={n} className="bg-paradise-950">{n} Pax</option>)}
+                     {Array.from({length: 30}, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-paradise-950">{n} Pax</option>)}
                   </select>
                 </div>
                 <div>
@@ -215,30 +217,40 @@ export default function PublishPage() {
                     <span className="text-paradise-200 text-sm font-medium">{am}</span>
                  </label>
                ))}
-               <div className="flex flex-col gap-2 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+               {/* Show selected "other" amenities as checkboxes too */}
+               {formData.amenities.filter(am => !AVAILABLE_AMENITIES.includes(am)).map(am => (
+                 <label key={am} className="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 cursor-pointer transition-colors">
+                    <input type="checkbox" checked={true} onChange={() => toggleAmenity(am)} className="accent-emerald-500 w-4 h-4" />
+                    <span className="text-emerald-400 text-sm font-bold">{am}</span>
+                 </label>
+               ))}
+               <form 
+                 onSubmit={(e) => {
+                   e.preventDefault();
+                   if (otherAmenity.trim()) {
+                     toggleAmenity(otherAmenity.trim());
+                     setOtherAmenity('');
+                   }
+                 }}
+                 className="flex flex-col gap-2 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 group focus-within:border-emerald-500/50 transition-all"
+               >
                   <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">{lang === 'es' ? 'Otro' : 'Other'}</span>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
                       placeholder="Ej: Helipuerto" 
-                      className="bg-transparent border-b border-emerald-500/30 text-white text-sm outline-none w-full" 
+                      className="bg-transparent border-b border-emerald-500/30 text-white text-sm outline-none w-full py-1" 
                       value={otherAmenity}
                       onChange={e => setOtherAmenity(e.target.value)}
                     />
                     <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (otherAmenity.trim()) {
-                          toggleAmenity(otherAmenity.trim());
-                          setOtherAmenity('');
-                        }
-                      }}
-                      className="p-1 bg-emerald-500 rounded-lg text-white"
+                      type="submit"
+                      className="p-1.5 bg-emerald-500 rounded-lg text-white hover:scale-110 active:scale-95 transition-transform"
                     >
                       <Plus size={16} />
                     </button>
                   </div>
-               </div>
+               </form>
             </div>
           </section>
         </div>
@@ -254,7 +266,7 @@ export default function PublishPage() {
           <button 
             onClick={handlePublish}
             disabled={loading}
-            className="w-full btn-emerald py-5 text-sm uppercase tracking-[0.2em] font-black shadow-emerald-500/20 shadow-2xl disabled:opacity-50"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-paradise-950 py-6 rounded-3xl text-sm uppercase tracking-[0.3em] font-black shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 ring-1 ring-emerald-400/50"
           >
             {loading ? (lang === 'es' ? 'Publicando...' : 'Publishing...') : (lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing')}
           </button>

@@ -10,9 +10,10 @@ import { supabase } from '../lib/supabase';
 export default function AICopilotBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'ai', content: '¡Hola! Soy tu Copiloto de Paradise Premium. ¿En qué puedo ayudarte a encontrar tu lugar ideal en Medellín?' }
+    { role: 'ai', content: '¡Hola! Bienvenido a Paradise Premium. Soy tu asistente experto en propiedades de lujo en Medellín. ¿Buscas un apartamento exclusivo, una finca o quizás un yate en Guatapé?' }
   ]);
   const [input, setInput] = useState('');
+  const [lang, setLang] = useState(localStorage.getItem('lang') || 'es');
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
@@ -25,15 +26,26 @@ export default function AICopilotBubble() {
 
     try {
       if (!geminiModel) {
-        setMessages(prev => [...prev, { role: 'ai', content: '¡Hola! Para activarme, por favor configura tu Gemini API Key en el archivo .env. ¡Estaré listo para ayudarte en un segundo!' }]);
+        setMessages(prev => [...prev, { role: 'ai', content: '¡Hola! Por favor configura tu VITE_GEMINI_API_KEY en el panel de control o archivo .env para activarme. ¡Estaré listo para ayudarte!' }]);
         return;
       }
 
-      const prompt = `Eres el Asistente de Servicio al Cliente de Paradise Premium Rentals. 
-      Tu objetivo es ayudar de forma amable y directa. 
-      Si preguntan por propiedades, dile que pueden verlas en el menú superior o que puedes contactarlos con Andrea o Gustavo.
-      Sé conciso, profesional y servicial. No uses tecnicismos.
-      Usuario: "${input}"`;
+      const prompt = `Eres el Agente Oficial de Paradise Premium Rentals en Medellín, Colombia. 
+      Tu nombre es Paradise Copilot. Tu tono es extremadamente profesional, servicial y sofisticado.
+      
+      CONOCIMIENTO DE LA EMPRESA:
+      - Ofrecemos los apartamentos, casas y fincas más exclusivos de Medellín (El Poblado, Guatapé, Santa Fe de Antioquia).
+      - También gestionamos vehículos acuáticos de lujo en la represa de Guatapé.
+      - Nuestros socios directos son Andrea y Gustavo. Si alguien quiere reservar o ver una propiedad, dile que deben contactarlos directamente.
+      - Andrea y Gustavo son expertos en hospitalidad premium.
+      
+      REGLAS DE RESPUESTA:
+      - Responde SIEMPRE en Español, a menos que el usuario te hable en Inglés.
+      - Sé conciso pero elegante.
+      - Para ver el catálogo completo, indícales que usen el menú de arriba ("Apartamentos", "Fincas", "Vehículos").
+      - No inventes precios. Si preguntan, diles que pueden verlos en los detalles de cada propiedad o consultarlo con un socio.
+      
+      Usuario pregunta: "${input}"`;
 
       const result = await geminiModel.generateContent(prompt);
       const response = await result.response;
@@ -41,6 +53,7 @@ export default function AICopilotBubble() {
 
       setMessages(prev => [...prev, { role: 'ai', content: text }]);
     } catch (error) {
+      console.error('Gemini Error:', error);
       setMessages(prev => [...prev, { role: 'ai', content: 'Lo siento, tuve un pequeño problema de conexión. ¿Podrías repetirme eso?' }]);
     } finally {
       setLoading(false);
@@ -57,15 +70,15 @@ export default function AICopilotBubble() {
                <div className="bg-accent-500/20 p-1.5 rounded-lg text-accent-400">
                  <Sparkles size={16} />
                </div>
-               <div>
-                 <p className="text-xs font-bold text-paradise-50 uppercase tracking-widest">Paradise Copilot</p>
-                 <p className="text-[9px] text-accent-400 font-bold uppercase">Online Now</p>
-               </div>
-            </div>
-            <button onClick={() => setIsOpen(false)} className="text-paradise-400 hover:text-paradise-100">
-              <X size={20} />
-            </button>
-          </div>
+                <div>
+                  <p className="text-xs font-bold text-paradise-50 uppercase tracking-widest">Paradise Copilot</p>
+                  <p className="text-[9px] text-accent-400 font-bold uppercase">Online Now</p>
+                </div>
+             </div>
+             <button onClick={() => setIsOpen(false)} className="text-paradise-400 hover:text-paradise-100">
+               <X size={20} />
+             </button>
+           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, i) => (
