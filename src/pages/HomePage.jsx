@@ -3,6 +3,7 @@
 // --------------------------------------------------------
 import { Search, Building2, Trees, Ship, Star, Award, MapPin, ChevronRight, Zap } from 'lucide-react';
 import { Link, useOutletContext } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 const CATEGORIES = [
   { id: 'apts', icon: Building2, to: '/apartments' },
@@ -10,27 +11,22 @@ const CATEGORIES = [
   { id: 'water', icon: Ship, to: '/water-vehicles' },
 ];
 
-const RECENT_PROPERTIES = [
-  {
-    id: 1,
-    title: '(X) Penthouse Provenza Luxury',
-    price: '12.000.000',
-    location: 'El Poblado',
-    img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-    tag: 'Premium'
-  },
-  {
-    id: 2,
-    title: '(X) Minimalist Loft Laureles',
-    price: '4.500.000',
-    location: 'Laureles',
-    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
-    tag: 'Modern'
-  }
-];
+import { getProperties, removeProperty } from '../lib/store';
 
 export default function HomePage() {
   const { lang, t } = useOutletContext();
+  const [recentProperties, setRecentProperties] = useState([]);
+
+  useEffect(() => {
+    setRecentProperties(getProperties().slice(0, 4));
+  }, []);
+
+  const handleDelete = (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeProperty(id);
+    setRecentProperties(getProperties().slice(0, 4));
+  };
 
   const CAT_INFO = [
     { title: t.cat_apartments, count: '30+' },
@@ -140,33 +136,45 @@ export default function HomePage() {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {RECENT_PROPERTIES.map((prop) => (
+              {recentProperties.map((prop) => (
                 <Link 
                   key={prop.id} 
                   to={`/property/${prop.id}`} 
-                  className="group block relative rounded-[48px] overflow-hidden shadow-2xl transition-all duration-1000 hover:shadow-orange-glow"
+                  className="group block relative rounded-[48px] overflow-hidden shadow-2xl transition-all duration-1000 hover:shadow-orange-glow border border-white/5"
                 >
+                   {/* Boton para remover propiedades (Falsas o reales, todas tienen botón aquí para que el owner pueda limpiar) */}
+                   <button 
+                     onClick={(e) => handleDelete(e, prop.id)}
+                     className="absolute z-20 top-6 right-6 bg-red-500/80 backdrop-blur-md text-white px-5 py-2.5 rounded-full hover:bg-red-600 transition-colors shadow-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2"
+                   >
+                     ELIMINAR
+                   </button>
+
                    <div className="relative h-[550px] overflow-hidden">
-                      <img src={prop.img} alt={prop.title} className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" />
+                      <img src={prop.images?.[0]} alt={prop.title} className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-paradise-950 via-paradise-950/20 to-transparent opacity-90" />
                       
                       <div className="absolute top-10 left-10">
                          <div className="bg-orange-500/20 backdrop-blur-md border border-orange-500/20 text-orange-300 text-[10px] font-bold px-6 py-2.5 rounded-full uppercase tracking-widest">
-                           {prop.tag}
+                           {prop.category}
                          </div>
                       </div>
 
                       <div className="absolute bottom-12 left-12 right-12">
                          <div className="flex justify-between items-end mb-6">
                             <div>
-                               <h3 className="text-3xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors uppercase tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{prop.title}</h3>
+                               <h3 className="text-3xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors uppercase tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                                 {prop.isMock ? `(X) ${prop.title}` : prop.title}
+                               </h3>
                                <p className="flex items-center gap-2 text-paradise-300 font-medium">
-                                 <MapPin size={18} className="text-orange-500" /> {prop.location}, Medellín
+                                 <MapPin size={18} className="text-orange-500" /> {prop.neighborhood || prop.location}
                                </p>
                             </div>
                             <div className="text-right">
                                <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest mb-1">Desde</p>
-                               <p className="text-3xl font-black text-white">${prop.price}</p>
+                               <p className="text-3xl font-black text-white">
+                                 {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(prop.price)}
+                               </p>
                             </div>
                          </div>
                          <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-orange-500 to-gold-400 transition-all duration-1000 rounded-full" />

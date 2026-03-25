@@ -2,54 +2,9 @@
 // FincasPage — Country estates & recreational properties
 // --------------------------------------------------------
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { getProperties, removeProperty } from '../lib/store';
 import PropertyCard from '../components/PropertyCard';
 import { Search, Mountain } from 'lucide-react';
-
-const DEMO_FINCAS = [
-  {
-    id: 'f1',
-    title: 'Finca Premium en el Eje Cafetero',
-    price: 3800000000,
-    location: 'Quindío',
-    neighborhood: 'Salento',
-    bedrooms: 6,
-    bathrooms: 5,
-    area_m2: 5000,
-    pet_friendly: true,
-    images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80'],
-    category: 'finca',
-    status: 'available',
-  },
-  {
-    id: 'f2',
-    title: 'Hacienda con Lago Privado',
-    price: 6500000000,
-    location: 'Antioquia',
-    neighborhood: 'Rionegro',
-    bedrooms: 8,
-    bathrooms: 6,
-    area_m2: 12000,
-    pet_friendly: true,
-    images: ['https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80'],
-    category: 'finca',
-    status: 'available',
-  },
-  {
-    id: 'f3',
-    title: 'Eco-Finca Moderna en Santander',
-    price: 2200000000,
-    location: 'Santander',
-    neighborhood: 'Mesa de los Santos',
-    bedrooms: 4,
-    bathrooms: 3,
-    area_m2: 8000,
-    pet_friendly: true,
-    images: ['https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80'],
-    category: 'finca',
-    status: 'available',
-  },
-];
 
 export default function FincasPage() {
   const [properties, setProperties] = useState([]);
@@ -60,23 +15,21 @@ export default function FincasPage() {
     fetchFincas();
   }, []);
 
-  async function fetchFincas() {
+  function fetchFincas() {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('category', 'finca')
-        .eq('status', 'available')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProperties(data?.length ? data : DEMO_FINCAS);
+      const data = getProperties().filter(p => p.category === 'finca');
+      setProperties(data);
     } catch {
-      setProperties(DEMO_FINCAS);
+      setProperties([]);
     } finally {
       setLoading(false);
     }
   }
+
+  const handleDelete = (id) => {
+    removeProperty(id);
+    fetchFincas();
+  };
 
   const filtered = properties.filter(
     (p) =>
@@ -115,7 +68,7 @@ export default function FincasPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map((p) => (
-            <PropertyCard key={p.id} property={p} />
+            <PropertyCard key={p.id} property={p} onDelete={handleDelete} />
           ))}
           {filtered.length === 0 && (
             <p className="col-span-full text-center text-paradise-500 py-16">

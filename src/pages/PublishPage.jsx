@@ -1,12 +1,11 @@
-// --------------------------------------------------------
-// PublishPage — Con selector de Categoría y Multi-idioma
-// --------------------------------------------------------
 import { useState } from 'react';
-import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves } from 'lucide-react';
-import { useOutletContext } from 'react-router-dom';
+import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks } from 'lucide-react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
+import { addProperty } from '../lib/store';
 
 export default function PublishPage() {
   const { lang, t } = useOutletContext();
+  const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -15,15 +14,25 @@ export default function PublishPage() {
     description: '',
     category: 'apartment',
     videoUrl: '',
-    beds: '',
-    baths: '',
-    area: '',
+    bedrooms: '1',
+    bathrooms: '1',
+    area_m2: '',
+    capacity: '2',
+    amenities: []
   });
+
+  const AVAILABLE_AMENITIES = [
+    'Piscina', 'Jacuzzi Privado', 'Gimnasio', 'Seguridad 24/7',
+    'Smart Home', 'Terraza 360°', 'Balcón', 'Cocina Integral',
+    'Fibra Óptica', 'Lavandería', 'Zona BBQ', 'Aire Acondicionado'
+  ];
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => URL.createObjectURL(file));
-    setImages([...images, ...newImages]);
+    // Para modo demo guardaremos blob urls o placeholders
+    // Pero como localStorage falla con blobs largos si son muchos, vamos a mockear la imagen por ahora
+    const mockImages = files.map(() => 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80');
+    setImages([...images, ...mockImages]);
   };
 
   const removeImage = (index) => {
@@ -39,18 +48,48 @@ export default function PublishPage() {
   const AUTHORIZED_EMAILS = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
   const [loading, setLoading] = useState(false);
 
+  const toggleAmenity = (am) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(am)
+        ? prev.amenities.filter(a => a !== am)
+        : [...prev.amenities, am]
+    }));
+  };
+
   const handlePublish = async () => {
-    const userEmail = 'marlon@paradise.com'; // Placeholder
+    // In production, this would come from Auth Context
+    const userEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar:' : 'Enter partner email to authorize:');
 
     if (!AUTHORIZED_EMAILS.includes(userEmail)) {
-      alert(lang === 'es' ? 'Solo Marlon, Andrea y Gustavo pueden publicar.' : 'Only Marlon, Andrea, and Gustavo can publish.');
+      alert(lang === 'es' ? 'Solo Marlon, Andrea y Gustavo pueden publicar propiedades.' : 'Only Marlon, Andrea, and Gustavo can publish.');
       return;
     }
 
     setLoading(true);
     try {
-      // Logic for supabase insertion would go here
-      alert(lang === 'es' ? '¡Propiedad publicada con éxito!' : 'Property published successfully!');
+      const priceClean = formData.price.replace(/\D/g, '');
+      const newProp = {
+        title: formData.title,
+        price: parseInt(priceClean || 0),
+        location: formData.location,
+        neighborhood: formData.location,
+        description: formData.description,
+        category: formData.category,
+        videoUrl: formData.videoUrl,
+        bedrooms: parseInt(formData.bedrooms || 0),
+        bathrooms: parseInt(formData.bathrooms || 0),
+        area_m2: parseInt(formData.area_m2 || 0),
+        capacity: parseInt(formData.capacity || 0),
+        amenities: formData.amenities,
+        images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'],
+        status: 'available',
+        isMock: false
+      };
+
+      const created = addProperty(newProp);
+      alert(lang === 'es' ? '¡Propiedad publicada con éxito! Ya puedes verla en tu catálogo.' : 'Property published successfully!');
+      navigate(`/property/${created.id}`);
     } catch (error) {
       console.error(error);
       alert(lang === 'es' ? 'Error al publicar.' : 'Error publishing.');
@@ -66,7 +105,7 @@ export default function PublishPage() {
           {lang === 'es' ? 'Publicar una Nueva' : 'Publish a New'} <span className="text-emerald-glow">{lang === 'es' ? 'Propiedad' : 'Property'}</span>
         </h1>
         <p className="text-paradise-400 font-medium">
-          {lang === 'es' ? 'Acceso exclusivo para Marlon, Andrea y Gustavo.' : 'Exclusive access for Marlon, Andrea, and Gustavo.'}
+          {lang === 'es' ? 'Acceso exclusivo para socios.' : 'Exclusive access for partners.'}
         </p>
       </div>
 
@@ -110,10 +149,11 @@ export default function PublishPage() {
               ))}
               <label className="aspect-square rounded-2xl border-2 border-dashed border-paradise-800 hover:border-emerald-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-paradise-900/30 group">
                 <Plus size={24} className="text-paradise-600 group-hover:text-emerald-500" />
-                <span className="text-[10px] font-bold text-paradise-600 group-hover:text-emerald-500 uppercase">Subir Foto</span>
+                <span className="text-[10px] font-bold text-paradise-600 group-hover:text-emerald-500 uppercase">Añadir Foto</span>
                 <input type="file" multiple className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
+            <p className="text-xs text-paradise-500">Nota: Al estar en modo demo, las fotos se simularán para evitar límites de memoria del navegador.</p>
           </section>
 
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
@@ -123,10 +163,50 @@ export default function PublishPage() {
             <div className="space-y-6">
               <input type="text" placeholder={lang === 'es' ? "Título del anuncio (ej. Penthouse en El Poblado)" : "Listing Title"} className="input-field" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" placeholder={lang === 'es' ? "Precio Alquiler (Mensual)" : "Monthly Rent"} className="input-field" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-                <input type="text" placeholder={lang === 'es' ? "Barrio / Sector" : "Neighborhood"} className="input-field" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                <input type="text" placeholder={lang === 'es' ? "Precio (COP)" : "Price (COP)"} className="input-field" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+                <input type="text" placeholder={lang === 'es' ? "Barrio / Sector / Ciudad" : "Neighborhood"} className="input-field" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
               </div>
-              <textarea placeholder={lang === 'es' ? "Descripción detallada..." : "Detailed description..."} className="input-field min-h-[150px]" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+                <div>
+                  <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Habitaciones' : 'Beds'}</label>
+                  <select className="input-field" value={formData.bedrooms} onChange={e => setFormData({...formData, bedrooms: e.target.value})}>
+                     {[0,1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Baños' : 'Baths'}</label>
+                  <select className="input-field" value={formData.bathrooms} onChange={e => setFormData({...formData, bathrooms: e.target.value})}>
+                     {[0,1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n} className="bg-paradise-950">{n}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Capacidad' : 'Capacity'}</label>
+                  <select className="input-field" value={formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value})}>
+                     {[2,4,6,8,10,12,15,20].map(n => <option key={n} value={n} className="bg-paradise-950">{n} Pax</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-paradise-400 uppercase tracking-widest mb-2 font-bold">{lang === 'es' ? 'Área (m²)' : 'Area'}</label>
+                  <input type="number" placeholder="Ej: 120" className="input-field" value={formData.area_m2} onChange={e => setFormData({...formData, area_m2: e.target.value})} />
+                </div>
+              </div>
+
+              <textarea placeholder={lang === 'es' ? "Descripción detallada..." : "Detailed description..."} className="input-field min-h-[150px] mt-4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            </div>
+          </section>
+
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <ListChecks size={16} /> 4. {lang === 'es' ? 'Amenidades Adicionales' : 'Amenities'}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+               {AVAILABLE_AMENITIES.map(am => (
+                 <label key={am} className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 cursor-pointer transition-colors">
+                    <input type="checkbox" checked={formData.amenities.includes(am)} onChange={() => toggleAmenity(am)} className="accent-emerald-500 w-4 h-4" />
+                    <span className="text-paradise-200 text-sm font-medium">{am}</span>
+                 </label>
+               ))}
             </div>
           </section>
         </div>
@@ -142,7 +222,7 @@ export default function PublishPage() {
           <button 
             onClick={handlePublish}
             disabled={loading}
-            className="w-full btn-primary py-5 text-sm uppercase tracking-[0.2em] font-black shadow-emerald-500/20 shadow-2xl disabled:opacity-50"
+            className="w-full btn-emerald py-5 text-sm uppercase tracking-[0.2em] font-black shadow-emerald-500/20 shadow-2xl disabled:opacity-50"
           >
             {loading ? (lang === 'es' ? 'Publicando...' : 'Publishing...') : (lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing')}
           </button>
