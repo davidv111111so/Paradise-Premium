@@ -8,14 +8,7 @@ import {
   Wifi, Car, Tv, Wind, Coffee
 } from 'lucide-react';
 
-import { useParams, Link } from 'react-router-dom';
 import { getProperty } from '../lib/store';
-import { 
-  MapPin, Bed, Bath, Maximize, CheckCircle, 
-  MessageCircle, Phone, Star, ChevronLeft, 
-  Wifi, Car, Tv, Wind, Coffee
-} from 'lucide-react';
-
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const property = getProperty(id);
