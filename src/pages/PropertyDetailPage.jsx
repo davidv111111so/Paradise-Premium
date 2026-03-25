@@ -21,8 +21,11 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const p = getProperty(id);
-    if (p) setProperty(p);
+    const fetchProp = async () => {
+      const p = await getProperty(id);
+      if (p) setProperty(p);
+    };
+    fetchProp();
   }, [id]);
 
   if (!property) {

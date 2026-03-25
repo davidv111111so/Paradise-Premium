@@ -102,33 +102,65 @@ function initStore() {
   }
 }
 
-export const getProperties = () => {
+export const getProperties = async () => {
   initStore();
-  const data = localStorage.getItem('paradise_properties');
-  return data ? JSON.parse(data) : [];
+  
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (!error && data && data.length > 0) {
+      // Sync local with cloud
+      localStorage.setItem('paradise_properties', JSON.stringify(data));
+      return data;
+    }
+  } catch (e) {
+    console.error('Supabase fetch error:', e);
+  }
+
+  const localData = localStorage.getItem('paradise_properties');
+  return localData ? JSON.parse(localData) : [];
 };
 
-export const getProperty = (id) => {
-  const all = getProperties();
+export const getProperty = async (id) => {
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (!error && data) return data;
+  } catch (e) {}
+
+  const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
   return all.find(p => String(p.id) === String(id));
 };
 
-export const addProperty = (prop) => {
-  const all = getProperties();
+export const addProperty = async (prop) => {
+  const newId = Date.now().toString();
   const newProp = {
     ...prop,
-    id: Date.now().toString(), // Improved ID generation
+    id: newId,
     created_at: new Date().toISOString()
   };
   
-  const updated = [newProp, ...all];
-  localStorage.setItem('paradise_properties', JSON.stringify(updated));
+  // 1. Local Save (Immediate UX)
+  const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+  localStorage.setItem('paradise_properties', JSON.stringify([newProp, ...all]));
   
-  // Async Sync to Supabase for "Cloud Persistence"
-  // (Note: This assumes a 'properties' table exists)
-  supabase.from('properties').insert([newProp]).then(({ error }) => {
-    if (error) console.warn('Supabase backup failed:', error.message);
-  });
+  // 2. Cloud Save (Persistence)
+  try {
+    const { error } = await supabase.from('properties').insert([newProp]);
+    if (error) {
+      console.error('Supabase Sync Error:', error.message);
+      // We still return true because local save worked, but warn the user
+    }
+  } catch (e) {
+    console.warn('Cloud backup failed, working in offline mode.');
+  }
 
   return newProp;
 };

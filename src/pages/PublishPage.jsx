@@ -97,7 +97,7 @@ export default function PublishPage() {
         isMock: false
       };
 
-      const created = addProperty(newProp);
+      const created = await addProperty(newProp);
       alert(lang === 'es' ? '¡Propiedad publicada con éxito! Ya puedes verla en tu catálogo.' : 'Property published successfully!');
       navigate(`/property/${created.id}`);
     } catch (error) {

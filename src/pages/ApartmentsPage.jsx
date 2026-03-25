@@ -15,9 +15,11 @@ export default function ApartmentsPage() {
     fetchProperties();
   }, []);
 
-  function fetchProperties() {
+  async function fetchProperties() {
+    setLoading(true);
     try {
-      const data = getProperties().filter(p => ['apartment', 'house'].includes(p.category));
+      const all = await getProperties();
+      const data = all.filter(p => ['apartment', 'house'].includes(p.category));
       setProperties(data);
     } catch {
       setProperties([]);

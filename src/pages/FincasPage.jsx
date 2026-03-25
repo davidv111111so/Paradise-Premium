@@ -15,9 +15,11 @@ export default function FincasPage() {
     fetchFincas();
   }, []);
 
-  function fetchFincas() {
+  async function fetchFincas() {
+    setLoading(true);
     try {
-      const data = getProperties().filter(p => p.category === 'finca');
+      const all = await getProperties();
+      const data = all.filter(p => p.category === 'finca');
       setProperties(data);
     } catch {
       setProperties([]);

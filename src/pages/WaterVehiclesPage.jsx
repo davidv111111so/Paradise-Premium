@@ -15,9 +15,11 @@ export default function WaterVehiclesPage() {
     fetchVehicles();
   }, []);
 
-  function fetchVehicles() {
+  async function fetchVehicles() {
+    setLoading(true);
     try {
-      const data = getProperties().filter(p => p.category === 'vehicle');
+      const all = await getProperties();
+      const data = all.filter(p => p.category === 'vehicle');
       setVehicles(data);
     } catch {
       setVehicles([]);
