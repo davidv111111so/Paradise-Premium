@@ -79,8 +79,16 @@ export default function PublishPage() {
       return;
     }
 
-    if (images.length > 0 && images.some(img => img.length > 1000000)) {
-      alert(lang === 'es' ? 'Algunas imágenes son demasiado pesadas. Intenta con fotos de menor resolución o menos cantidad.' : 'Some images are too large. Try with smaller photos.');
+    const TOTAL_LIMIT = 80000000; // ~60MB real total after base64 overhead
+    const totalSize = images.reduce((acc, img) => acc + img.length, 0);
+
+    if (images.length > 0 && images.some(img => img.length > 25000000)) {
+      alert(lang === 'es' ? 'Una de las imágenes es demasiado pesada (máx 25MB). Por favor redúcela un poco.' : 'One image is too large (max 25MB).');
+      return;
+    }
+
+    if (totalSize > TOTAL_LIMIT) {
+      alert(lang === 'es' ? 'La suma de todas las imágenes es demasiado grande. Intenta subir menos fotos o de menor peso.' : 'Total images size is too large for a single upload.');
       return;
     }
 
