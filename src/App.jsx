@@ -18,6 +18,14 @@ import PropertyDetailPage from './pages/PropertyDetailPage';
 export default function App() {
   // Load Tawk.to chat widget safely via useEffect (avoids TrustedHTML CSP issues)
   useEffect(() => {
+    // Force Spanish language
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_API.onLoad = function() {
+      window.Tawk_API.setAttributes({
+        'language': 'es'
+      }, function(error){});
+    };
+
     const s1 = document.createElement('script');
     s1.async = true;
     s1.src = 'https://embed.tawk.to/69c458060976361c3598d20c/default';
