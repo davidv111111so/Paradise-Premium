@@ -69,10 +69,18 @@ export default function PublishPage() {
   };
 
   const handlePublish = async () => {
-    const userEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar:' : 'Enter partner email to authorize:');
+    const rawEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar:' : 'Enter partner email to authorize:');
+    if (!rawEmail) return;
+    
+    const userEmail = rawEmail.trim().toLowerCase();
 
     if (!AUTHORIZED_EMAILS.includes(userEmail)) {
       alert(lang === 'es' ? 'Solo Marlon, Andrea y Gustavo pueden publicar propiedades.' : 'Only Marlon, Andrea, and Gustavo can publish.');
+      return;
+    }
+
+    if (images.length > 0 && images.some(img => img.length > 1000000)) {
+      alert(lang === 'es' ? 'Algunas imágenes son demasiado pesadas. Intenta con fotos de menor resolución o menos cantidad.' : 'Some images are too large. Try with smaller photos.');
       return;
     }
 
@@ -80,11 +88,11 @@ export default function PublishPage() {
     try {
       const priceClean = formData.price.replace(/\D/g, '');
       const newProp = {
-        title: formData.title,
+        title: formData.title || 'Propiedad sin título',
         price: parseInt(priceClean || 0),
-        location: formData.location,
-        neighborhood: formData.location,
-        description: formData.description,
+        location: formData.location || 'Medellín',
+        neighborhood: formData.location || 'Medellín',
+        description: formData.description || '',
         category: formData.category,
         videoUrl: formData.videoUrl,
         bedrooms: parseInt(formData.bedrooms || 0),
@@ -101,8 +109,8 @@ export default function PublishPage() {
       alert(lang === 'es' ? '¡Propiedad publicada con éxito! Ya puedes verla en tu catálogo.' : 'Property published successfully!');
       navigate(`/property/${created.id}`);
     } catch (error) {
-      console.error(error);
-      alert(lang === 'es' ? 'Error al publicar.' : 'Error publishing.');
+      console.error('Publish Error:', error);
+      alert(lang === 'es' ? `Error al publicar: ${error.message || 'Error desconocido'}` : `Error publishing: ${error.message}`);
     } finally {
       setLoading(false);
     }
