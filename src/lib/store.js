@@ -140,29 +140,56 @@ export const getProperty = async (id) => {
 };
 
 export const addProperty = async (prop) => {
-  const newId = Date.now().toString();
-  const newProp = {
-    ...prop,
-    id: newId,
-    created_at: new Date().toISOString()
+  const localId = Date.now().toString();
+  const now = new Date().toISOString();
+
+  // Build the object for Supabase (snake_case, no manual id — UUID is auto-generated)
+  const cloudProp = {
+    title: prop.title,
+    price: prop.price,
+    location: prop.location,
+    neighborhood: prop.neighborhood || prop.location,
+    description: prop.description,
+    category: prop.category,
+    "videoUrl": prop.videoUrl || '',
+    bedrooms: prop.bedrooms || 0,
+    bathrooms: prop.bathrooms || 0,
+    area_m2: prop.area_m2 || 0,
+    capacity: prop.capacity || 0,
+    amenities: prop.amenities || [],
+    images: prop.images || [],
+    status: prop.status || 'available',
+    "isMock": false
   };
+
+  // Build local object (keeps the local id for immediate display)
+  const localProp = { ...cloudProp, id: localId, created_at: now };
   
   // 1. Local Save (Immediate UX)
   const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
-  localStorage.setItem('paradise_properties', JSON.stringify([newProp, ...all]));
+  localStorage.setItem('paradise_properties', JSON.stringify([localProp, ...all]));
   
   // 2. Cloud Save (Persistence)
   try {
-    const { error } = await supabase.from('properties').insert([newProp]);
+    const { data, error } = await supabase.from('properties').insert([cloudProp]).select();
     if (error) {
       console.error('Supabase Sync Error:', error.message);
-      // We still return true because local save worked, but warn the user
+    } else if (data && data[0]) {
+      // Update localProp with the real UUID from Supabase
+      localProp.id = data[0].id;
+      localProp.created_at = data[0].created_at;
+      // Re-save to localStorage with the real UUID
+      const updated = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+      const idx = updated.findIndex(p => p.id === localId);
+      if (idx !== -1) updated[idx] = { ...localProp };
+      localStorage.setItem('paradise_properties', JSON.stringify(updated));
+      console.log('✅ Property synced to cloud:', data[0].id);
     }
   } catch (e) {
     console.warn('Cloud backup failed, working in offline mode.');
   }
 
-  return newProp;
+  return localProp;
 };
 
 export const removeProperty = (id) => {

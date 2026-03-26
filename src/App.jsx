@@ -18,12 +18,16 @@ import PropertyDetailPage from './pages/PropertyDetailPage';
 export default function App() {
   // Load Tawk.to chat widget safely via useEffect (avoids TrustedHTML CSP issues)
   useEffect(() => {
-    // Force Spanish language
+    // Definir configuración antes de cargar el script
     window.Tawk_API = window.Tawk_API || {};
     window.Tawk_API.onLoad = function() {
       window.Tawk_API.setAttributes({
         'language': 'es'
       }, function(error){});
+    };
+    // Forzar idioma del visitante
+    window.Tawk_API.visitor = {
+      language: 'es'
     };
 
     const s1 = document.createElement('script');
@@ -32,7 +36,12 @@ export default function App() {
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
     document.body.appendChild(s1);
-    return () => { try { document.body.removeChild(s1); } catch(e) {} };
+    
+    return () => { 
+      try { 
+        // No removemos el script en cada render para evitar parpadeos
+      } catch(e) {} 
+    };
   }, []);
 
   return (
