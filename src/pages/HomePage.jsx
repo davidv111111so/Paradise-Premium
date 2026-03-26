@@ -20,7 +20,7 @@ export default function HomePage() {
   const [recentProperties, setRecentProperties] = useState([]);
 
   useEffect(() => {
-    setRecentProperties(getProperties().slice(0, 4));
+    getProperties().then(props => setRecentProperties(props.slice(0, 4)));
   }, []);
 
   const handleDelete = (id) => {
@@ -34,7 +34,7 @@ export default function HomePage() {
 
     if (confirm(lang === 'es' ? '¿Seguro que quieres borrar esta propiedad?' : 'Are you sure you want to delete this property?')) {
       removeProperty(id);
-      setRecentProperties(getProperties().slice(0, 4));
+      getProperties().then(props => setRecentProperties(props.slice(0, 4)));
     }
   };
 

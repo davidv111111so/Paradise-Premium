@@ -166,7 +166,7 @@ export const addProperty = async (prop) => {
 };
 
 export const removeProperty = (id) => {
-  const all = getProperties();
+  const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
   const updated = all.filter(p => String(p.id) !== String(id));
   localStorage.setItem('paradise_properties', JSON.stringify(updated));
   
