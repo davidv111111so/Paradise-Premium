@@ -3,15 +3,8 @@
 // --------------------------------------------------------
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-if (!apiKey) {
-  console.warn(
-    '[Paradise] Missing Gemini API key. Set VITE_GEMINI_API_KEY in .env'
-  );
-}
-
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+const apiKey = 'AIzaSyC7N906e5V_38m9x70q1W2-u2Z6y8_0S_8';
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export function getModel(modelName = 'gemini-2.0-flash') {
   if (!genAI) {
