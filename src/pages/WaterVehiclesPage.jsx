@@ -2,11 +2,13 @@
 // WaterVehiclesPage — Boats, pontoons & water experiences
 // --------------------------------------------------------
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getProperties, removeProperty } from '../lib/store';
 import PropertyCard from '../components/PropertyCard';
 import { Search, Anchor } from 'lucide-react';
 
 export default function WaterVehiclesPage() {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +31,7 @@ export default function WaterVehiclesPage() {
   }
 
   const handleDelete = async (id) => {
-    const email = prompt('Ingrese su correo de socio para autorizar la ELIMINACIÓN:');
+    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la ELIMINACIÓN:');
     if (!email) return;
 
     try {
@@ -39,6 +41,10 @@ export default function WaterVehiclesPage() {
     } catch (e) {
       alert(e.message);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/publish?edit=${id}`);
   };
 
   const filtered = vehicles.filter(
@@ -79,7 +85,12 @@ export default function WaterVehiclesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map((v) => (
-            <PropertyCard key={v.id} property={v} onDelete={handleDelete} />
+            <PropertyCard 
+              key={v.id} 
+              property={v} 
+              onDelete={handleDelete} 
+              onEdit={handleEdit}
+            />
           ))}
           {filtered.length === 0 && (
             <p className="col-span-full text-center text-paradise-500 py-16">

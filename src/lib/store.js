@@ -97,8 +97,11 @@ const INITIAL_PROPERTIES = [
 // Helper to initialize LocalStorage if empty
 function initStore() {
   const existing = localStorage.getItem('paradise_properties_v4');
-  if (!existing) {
+  const wasInitialized = localStorage.getItem('paradise_initialized_v4');
+  
+  if (!existing && !wasInitialized) {
     localStorage.setItem('paradise_properties_v4', JSON.stringify(INITIAL_PROPERTIES));
+    localStorage.setItem('paradise_initialized_v4', 'true');
   }
 }
 
@@ -111,17 +114,15 @@ export const getProperties = async () => {
       .select('*')
       .order('created_at', { ascending: false });
       
-    if (!error && data && data.length > 0) {
-      // Sync local with cloud
+    if (!error) {
+      const cloudData = data || [];
+      // Sync local with cloud perfectly
       try {
-        localStorage.setItem('paradise_properties_v4', JSON.stringify(data));
+        localStorage.setItem('paradise_properties_v4', JSON.stringify(cloudData));
       } catch (e) {
         console.warn('LocalStorage Quota Exceeded during sync:', e.message);
-        // Fallback: clear and try to save just a subset
-        localStorage.clear();
-        try { localStorage.setItem('paradise_properties_v4', JSON.stringify(data.slice(0, 15))); } catch(e2) {}
       }
-      return data;
+      return cloudData;
     }
   } catch (e) {
     console.error('Supabase fetch error:', e);
@@ -219,19 +220,72 @@ export const removeProperty = async (id, rawEmail) => {
     throw new Error('No autorizado para eliminar propiedades.');
   }
 
-  // 1. Delete from Supabase
-  try {
-    const { error } = await supabase.from('properties').delete().eq('id', id);
-    if (error) throw error;
-    
-    // 2. Only if cloud succeeds, remove from local cache to prevent re-sync
-    const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-    const updated = all.filter(p => String(p.id) !== String(id));
-    localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
-    console.log('✅ Property removed from cloud and local cache:', id);
-    return updated;
-  } catch (e) {
-    console.error('Delete failed:', e.message);
-    throw new Error(`Error al eliminar en la nube: ${e.message}`);
+  // Handle Mock Deletion (Local only)
+  const isMockId = String(id).length < 5; // INITIAL_PROPERTIES use '1', '2', etc.
+  
+  if (!isMockId) {
+    // Delete from Supabase
+    try {
+      const { error } = await supabase.from('properties').delete().eq('id', id);
+      if (error) throw error;
+      console.log('✅ Property removed from cloud:', id);
+    } catch (e) {
+      console.error('Cloud delete failed:', e.message);
+      throw new Error(`Error al eliminar en la nube: ${e.message}`);
+    }
   }
+
+  // Remove from local cache regardless (mocks or successfully deleted cloud props)
+  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+  const updated = all.filter(p => String(p.id) !== String(id));
+  localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
+  return updated;
+};
+
+export const updateProperty = async (id, updates) => {
+  const now = new Date().toISOString();
+  // Build the payload for Supabase
+  const cloudUpdates = {
+    title: updates.title,
+    price: updates.price,
+    location: updates.location,
+    neighborhood: updates.neighborhood || updates.location,
+    description: updates.description,
+    category: updates.category,
+    videoUrl: updates.videoUrl || '',
+    bedrooms: updates.bedrooms || 0,
+    bathrooms: updates.bathrooms || 0,
+    area_m2: updates.area_m2 || 0,
+    capacity: updates.capacity || 0,
+    amenities: updates.amenities || [],
+    images: updates.images || [],
+    status: updates.status || 'available'
+  };
+
+  const isMockId = String(id).length < 5;
+
+  if (!isMockId) {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .update(cloudUpdates)
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      console.log('✅ Property updated in cloud:', id);
+    } catch (e) {
+      console.error('Cloud update failed:', e.message);
+      throw new Error(`Error al actualizar en la nube: ${e.message}`);
+    }
+  }
+
+  // Update local
+  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+  const idx = all.findIndex(p => String(p.id) === String(id));
+  if (idx !== -1) {
+    all[idx] = { ...all[idx], ...cloudUpdates, updated_at: now };
+    localStorage.setItem('paradise_properties_v4', JSON.stringify(all));
+  }
+  return all;
 };

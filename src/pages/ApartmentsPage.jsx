@@ -2,11 +2,13 @@
 // ApartmentsPage — Grid of luxury apartments & houses
 // --------------------------------------------------------
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getProperties, removeProperty } from '../lib/store';
 import PropertyCard from '../components/PropertyCard';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, Building2 } from 'lucide-react';
 
 export default function ApartmentsPage() {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +31,7 @@ export default function ApartmentsPage() {
   }
 
   const handleDelete = async (id) => {
-    const email = prompt('Ingrese su correo de socio para autorizar la ELIMINACIÓN:');
+    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la ELIMINACIÓN:');
     if (!email) return;
 
     try {
@@ -41,6 +43,10 @@ export default function ApartmentsPage() {
     }
   };
 
+  const handleEdit = (id) => {
+    navigate(`/publish?edit=${id}`);
+  };
+
   const filtered = properties.filter(
     (p) =>
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,17 +56,18 @@ export default function ApartmentsPage() {
 
   return (
     <div className="p-6 md:p-10 animate-fade-in">
-      {/* Header */}
       <div className="mb-8">
-        <h1 className="heading-display text-3xl md:text-4xl text-paradise-50 mb-2">
-          Apartamentos & Casas
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <Building2 size={28} className="text-emerald-400" />
+          <h1 className="heading-display text-3xl md:text-4xl text-paradise-50">
+            Apartamentos & Casas
+          </h1>
+        </div>
         <p className="text-paradise-400">
           Residencias de lujo seleccionadas para los más exigentes
         </p>
       </div>
 
-      {/* Search / Filters bar */}
       <div className="glass rounded-xl p-3 flex items-center gap-3 mb-8">
         <Search size={18} className="text-paradise-400 ml-2" />
         <input
@@ -75,7 +82,6 @@ export default function ApartmentsPage() {
         </button>
       </div>
 
-      {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
@@ -85,7 +91,12 @@ export default function ApartmentsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map((property) => (
-            <PropertyCard key={property.id} property={property} onDelete={handleDelete} />
+            <PropertyCard 
+              key={property.id} 
+              property={property} 
+              onDelete={handleDelete} 
+              onEdit={handleEdit}
+            />
           ))}
           {filtered.length === 0 && (
             <p className="col-span-full text-center text-paradise-500 py-16">

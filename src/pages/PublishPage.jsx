@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks } from 'lucide-react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { addProperty } from '../lib/store';
+import { useState, useEffect } from 'react';
+import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil } from 'lucide-react';
+import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
+import { addProperty, getProperty, updateProperty } from '../lib/store';
 
 export default function PublishPage() {
   const { lang, t } = useOutletContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  
   const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     price: '',
@@ -18,8 +22,45 @@ export default function PublishPage() {
     bathrooms: '1',
     area_m2: '',
     capacity: '2',
-    amenities: []
+    amenities: [],
+    status: 'available'
   });
+
+  const [otherAmenity, setOtherAmenity] = useState('');
+
+  // Load property if editing
+  useEffect(() => {
+    if (editId) {
+      const loadProperty = async () => {
+        setLoading(true);
+        try {
+          const prop = await getProperty(editId);
+          if (prop) {
+            setFormData({
+              title: prop.title || '',
+              price: String(prop.price || ''),
+              location: prop.location || '',
+              description: prop.description || '',
+              category: prop.category || 'apartment',
+              videoUrl: prop.videoUrl || '',
+              bedrooms: String(prop.bedrooms || '0'),
+              bathrooms: String(prop.bathrooms || '0'),
+              area_m2: String(prop.area_m2 || ''),
+              capacity: String(prop.capacity || '1'),
+              amenities: prop.amenities || [],
+              status: prop.status || 'available'
+            });
+            setImages(prop.images || []);
+          }
+        } catch (err) {
+          console.error("Error loading property for edit:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadProperty();
+    }
+  }, [editId]);
 
   const AVAILABLE_AMENITIES = [
     'Piscina', 'Jacuzzi Privado', 'Gimnasio', 'Seguridad 24/7',
@@ -28,8 +69,6 @@ export default function PublishPage() {
     'Parqueadero Privado', 'Ascensor', 'Canchas Deportivas', 'Sauna / Turco',
     'Pet Friendly', 'Sala de Cine', 'Coworking', 'Vista a la Ciudad'
   ];
-
-  const [otherAmenity, setOtherAmenity] = useState('');
 
   const compressImage = (file) => {
     return new Promise((resolve) => {
@@ -42,7 +81,7 @@ export default function PublishPage() {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const maxDim = 1200; // Max dimension to keep payload small
+          const maxDim = 1200; 
 
           if (width > height) {
             if (width > maxDim) {
@@ -60,7 +99,6 @@ export default function PublishPage() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          // Return as JPEG with 0.8 quality
           resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
       };
@@ -70,7 +108,6 @@ export default function PublishPage() {
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     setLoading(true);
-    
     try {
       const newImages = await Promise.all(
         files.map(file => compressImage(file))
@@ -93,24 +130,16 @@ export default function PublishPage() {
     { id: 'vehicle', label: t.nav_vehicles, icon: Ship },
   ];
 
-  const AUTHORIZED_EMAILS = [
-    'marlon@paradiserentas.com', 
-    'andrea@paradiserentas.com', 
-    'gustavo@paradiserentas.com',
-    'marlon', 'andrea', 'gustavo' // Redundancia para facilidad de uso
-  ];
-  const [loading, setLoading] = useState(false);
+  const AUTHORIZED_EMAILS = ['marlon', 'andrea', 'gustavo'];
 
-  // Función para prevenir QuotaExceededError limpiando datos viejos
   const manageQuota = () => {
     try {
       const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-      if (all.length > 50) {
-        // Mantener solo los últimos 50 si hay demasiados (un poco agresivo pero seguro)
-        localStorage.setItem('paradise_properties_v4', JSON.stringify(all.slice(0, 50)));
+      if (all.length > 60) {
+        localStorage.setItem('paradise_properties_v4', JSON.stringify(all.slice(0, 60)));
       }
     } catch (e) {
-      localStorage.clear(); // Último recurso si está corrupto o lleno
+      localStorage.clear();
     }
   };
 
@@ -127,43 +156,25 @@ export default function PublishPage() {
   };
 
   const handlePublish = async () => {
-    const rawEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar:' : 'Enter partner email to authorize:');
+    const rawEmail = prompt(lang === 'es' ? 'Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar:' : 'Authorization: Enter "andrea", "marlon" or "gustavo" to confirm:');
     if (!rawEmail) return;
     
     const userEmail = rawEmail.trim().toLowerCase();
-    
-    // Check if the input contains any of our partner names or the official domain
     const isPartner = AUTHORIZED_EMAILS.some(name => userEmail.includes(name)) || 
                      userEmail.endsWith('@paradiserentas.com') ||
-                     userEmail === 'andrea'; // Direct fallback for her
+                     userEmail === 'andrea';
 
     if (!isPartner) {
       alert(lang === 'es' 
-        ? `Solo Marlon, Andrea y Gustavo pueden publicar. (Recibido: ${userEmail})` 
-        : `Only Marlon, Andrea, and Gustavo can publish. (Received: ${userEmail})`);
+        ? `No autorizado. (Recibido: ${userEmail})` 
+        : `Unauthorized. (Received: ${userEmail})`);
       return;
     }
-
-    const TOTAL_LIMIT = 80000000; // ~60MB real total after base64 overhead
-    const totalSize = images.reduce((acc, img) => acc + img.length, 0);
-
-    if (images.length > 0 && images.some(img => img.length > 25000000)) {
-      alert(lang === 'es' ? 'Una de las imágenes es demasiado pesada (máx 25MB). Por favor redúcela un poco.' : 'One image is too large (max 25MB).');
-      return;
-    }
-
-    if (totalSize > TOTAL_LIMIT) {
-      alert(lang === 'es' ? 'La suma de todas las imágenes es demasiado grande. Intenta subir menos fotos o de menor peso.' : 'Total images size is too large for a single upload.');
-      return;
-    }
-
-    // Gestionar cuota de localStorage antes de guardar
-    manageQuota();
 
     setLoading(true);
     try {
-      const priceClean = formData.price.replace(/\D/g, '');
-      const newProp = {
+      const priceClean = String(formData.price).replace(/\D/g, '');
+      const propData = {
         title: formData.title || 'Propiedad sin título',
         price: parseInt(priceClean || 0),
         location: formData.location || 'Medellín',
@@ -177,16 +188,22 @@ export default function PublishPage() {
         capacity: parseInt(formData.capacity || 0),
         amenities: formData.amenities,
         images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'],
-        status: 'available',
-        isMock: false
+        status: formData.status || 'available'
       };
 
-      const created = await addProperty(newProp, userEmail);
-      alert(lang === 'es' ? '¡Propiedad publicada con éxito! Ya puedes verla en tu catálogo.' : 'Property published successfully!');
-      navigate(`/property/${created.id}`);
+      if (editId) {
+        await updateProperty(editId, propData);
+        alert(lang === 'es' ? '¡Propiedad actualizada con éxito!' : 'Property updated successfully!');
+        navigate(`/property/${editId}`);
+      } else {
+        manageQuota();
+        const created = await addProperty(propData, userEmail);
+        alert(lang === 'es' ? '¡Propiedad publicada con éxito!' : 'Property published successfully!');
+        navigate(`/property/${created.id}`);
+      }
     } catch (error) {
       console.error('Publish Error:', error);
-      alert(lang === 'es' ? `Error al publicar: ${error.message || 'Error desconocido'}` : `Error publishing: ${error.message}`);
+      alert(lang === 'es' ? `Error: ${error.message || 'Error desconocido'}` : `Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -196,10 +213,13 @@ export default function PublishPage() {
     <div className="p-6 md:p-10 animate-fade-in max-w-5xl mx-auto pb-40">
       <div className="mb-10 text-center">
         <h1 className="heading-display text-4xl text-paradise-50 mb-3">
-          {lang === 'es' ? 'Publicar una Nueva' : 'Publish a New'} <span className="text-emerald-glow">{lang === 'es' ? 'Propiedad' : 'Property'}</span>
+          {editId 
+            ? (lang === 'es' ? 'Editar' : 'Edit') 
+            : (lang === 'es' ? 'Publicar una Nueva' : 'Publish a New')
+          } <span className="text-emerald-glow">{lang === 'es' ? 'Propiedad' : 'Property'}</span>
         </h1>
         <p className="text-paradise-400 font-medium">
-          {lang === 'es' ? 'Acceso exclusivo para socios.' : 'Exclusive access for partners.'}
+          {editId ? (lang === 'es' ? 'Actualiza los detalles de tu anuncio.' : 'Update your listing details.') : (lang === 'es' ? 'Acceso exclusivo para socios.' : 'Exclusive access for partners.')}
         </p>
       </div>
 
@@ -208,7 +228,7 @@ export default function PublishPage() {
           
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-               <Plus size={16} /> 1. {lang === 'es' ? 'Selecciona Categoría' : 'Select Category'} {formData.category === 'apartment' && <span className="text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-500 animate-pulse">(POR DEFECTO)</span>}
+               {editId ? <Pencil size={16} /> : <Plus size={16} />} 1. {lang === 'es' ? 'Selecciona Categoría' : 'Select Category'}
              </h3>
              <div className="grid grid-cols-3 gap-4">
                 {CATEGORIES.map((cat) => (
@@ -248,7 +268,6 @@ export default function PublishPage() {
                 <input type="file" multiple className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
-            <p className="text-xs text-paradise-500">Nota: Las fotos se guardan en alta resolución para una experiencia premium.</p>
           </section>
 
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
@@ -302,7 +321,6 @@ export default function PublishPage() {
                     <span className="text-paradise-200 text-sm font-medium">{am}</span>
                  </label>
                ))}
-               {/* Show selected "other" amenities as checkboxes too */}
                {formData.amenities.filter(am => !AVAILABLE_AMENITIES.includes(am)).map(am => (
                  <label key={am} className="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 cursor-pointer transition-colors">
                     <input type="checkbox" checked={true} onChange={() => toggleAmenity(am)} className="accent-emerald-500 w-4 h-4" />
@@ -347,13 +365,25 @@ export default function PublishPage() {
             </h3>
             <input type="text" placeholder="YouTube or Vimeo URL" className="input-field" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} />
           </section>
+
+          <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <DollarSign size={16} /> {lang === 'es' ? 'Estado' : 'Status'}
+            </h3>
+            <select className="input-field" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+               <option value="available" className="bg-paradise-950">Disponible</option>
+               <option value="rented" className="bg-paradise-950">Arrendado</option>
+               <option value="sold" className="bg-paradise-950">Vendido</option>
+               <option value="maintenance" className="bg-paradise-950">Mantenimiento</option>
+            </select>
+          </section>
           
           <button 
             onClick={handlePublish}
             disabled={loading}
             className="w-full bg-emerald-500 hover:bg-emerald-400 text-paradise-950 py-6 rounded-3xl text-sm uppercase tracking-[0.3em] font-black shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 ring-1 ring-emerald-400/50"
           >
-            {loading ? (lang === 'es' ? 'Publicando...' : 'Publishing...') : (lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing')}
+            {loading ? (lang === 'es' ? 'Guardando...' : 'Saving...') : (editId ? (lang === 'es' ? 'Guardar Cambios' : 'Save Changes') : (lang === 'es' ? 'Publicar Anuncio' : 'Publish Listing'))}
           </button>
         </div>
       </div>
