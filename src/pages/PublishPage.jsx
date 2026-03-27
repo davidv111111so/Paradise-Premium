@@ -104,10 +104,10 @@ export default function PublishPage() {
   // Función para prevenir QuotaExceededError limpiando datos viejos
   const manageQuota = () => {
     try {
-      const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+      const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
       if (all.length > 50) {
         // Mantener solo los últimos 50 si hay demasiados (un poco agresivo pero seguro)
-        localStorage.setItem('paradise_properties', JSON.stringify(all.slice(0, 50)));
+        localStorage.setItem('paradise_properties_v4', JSON.stringify(all.slice(0, 50)));
       }
     } catch (e) {
       localStorage.clear(); // Último recurso si está corrupto o lleno

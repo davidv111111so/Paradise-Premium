@@ -96,9 +96,9 @@ const INITIAL_PROPERTIES = [
 
 // Helper to initialize LocalStorage if empty
 function initStore() {
-  const existing = localStorage.getItem('paradise_properties');
+  const existing = localStorage.getItem('paradise_properties_v4');
   if (!existing) {
-    localStorage.setItem('paradise_properties', JSON.stringify(INITIAL_PROPERTIES));
+    localStorage.setItem('paradise_properties_v4', JSON.stringify(INITIAL_PROPERTIES));
   }
 }
 
@@ -114,12 +114,12 @@ export const getProperties = async () => {
     if (!error && data && data.length > 0) {
       // Sync local with cloud
       try {
-        localStorage.setItem('paradise_properties', JSON.stringify(data));
+        localStorage.setItem('paradise_properties_v4', JSON.stringify(data));
       } catch (e) {
         console.warn('LocalStorage Quota Exceeded during sync:', e.message);
         // Fallback: clear and try to save just a subset
         localStorage.clear();
-        try { localStorage.setItem('paradise_properties', JSON.stringify(data.slice(0, 15))); } catch(e2) {}
+        try { localStorage.setItem('paradise_properties_v4', JSON.stringify(data.slice(0, 15))); } catch(e2) {}
       }
       return data;
     }
@@ -127,7 +127,7 @@ export const getProperties = async () => {
     console.error('Supabase fetch error:', e);
   }
 
-  const localData = localStorage.getItem('paradise_properties');
+  const localData = localStorage.getItem('paradise_properties_v4');
   return localData ? JSON.parse(localData) : [];
 };
 
@@ -172,8 +172,8 @@ export const addProperty = async (prop) => {
   const localProp = { ...cloudProp, id: localId, created_at: now };
   
   // 1. Local Save (Immediate UX)
-  const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
-  localStorage.setItem('paradise_properties', JSON.stringify([localProp, ...all]));
+  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+  localStorage.setItem('paradise_properties_v4', JSON.stringify([localProp, ...all]));
   
   // 2. Cloud Save (Persistence)
   try {
@@ -182,8 +182,8 @@ export const addProperty = async (prop) => {
     if (error) {
       // Remove from local if it failed cloud and we want to be strict? 
       // User says "arregla que funcione bien", so let's be strict.
-      const rollback = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
-      localStorage.setItem('paradise_properties', JSON.stringify(rollback.filter(p => p.id !== localId)));
+      const rollback = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+      localStorage.setItem('paradise_properties_v4', JSON.stringify(rollback.filter(p => p.id !== localId)));
       throw new Error(`Cloud sync failed: ${error.message}`);
     } 
     
@@ -192,10 +192,10 @@ export const addProperty = async (prop) => {
       localProp.id = data[0].id;
       localProp.created_at = data[0].created_at;
       // Re-save to localStorage with the real UUID
-      const updated = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+      const updated = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
       const idx = updated.findIndex(p => p.id === localId);
       if (idx !== -1) updated[idx] = { ...localProp };
-      localStorage.setItem('paradise_properties', JSON.stringify(updated));
+      localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
       console.log('✅ Property synced to cloud:', data[0].id);
       return localProp;
     }
@@ -208,9 +208,9 @@ export const addProperty = async (prop) => {
 };
 
 export const removeProperty = (id) => {
-  const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
   const updated = all.filter(p => String(p.id) !== String(id));
-  localStorage.setItem('paradise_properties', JSON.stringify(updated));
+  localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
   
   // Async Sync to Supabase
   supabase.from('properties').delete().eq('id', id).then(({ error }) => {
