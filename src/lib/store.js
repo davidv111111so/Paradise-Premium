@@ -207,13 +207,15 @@ export const addProperty = async (prop, authorEmail) => {
   return localProp;
 };
 
-export const removeProperty = async (id, partnerEmail) => {
-  const AUTHORIZED = [
-    'marlon@paradiserentas.com', 'andrea@paradiserentas.com', 'gustavo@paradiserentas.com',
-    'marlon', 'andrea', 'gustavo'
-  ];
+export const removeProperty = async (id, rawEmail) => {
+  const partnerEmail = (rawEmail || '').trim().toLowerCase();
+  const AUTHORIZED_NAMES = ['marlon', 'andrea', 'gustavo'];
+  
+  const isPartner = AUTHORIZED_NAMES.some(name => partnerEmail.includes(name)) || 
+                   partnerEmail.endsWith('@paradiserentas.com') ||
+                   partnerEmail === 'andrea'; // Direct fallback
 
-  if (!partnerEmail || !AUTHORIZED.includes(partnerEmail.toLowerCase())) {
+  if (!isPartner) {
     throw new Error('No autorizado para eliminar propiedades.');
   }
 

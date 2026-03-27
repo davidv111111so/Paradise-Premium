@@ -9,11 +9,11 @@ import { supabase } from '../lib/supabase';
 
 export default function AICopilotBubble() {
   const [isOpen, setIsOpen] = useState(false);
+  const [lang] = useState(localStorage.getItem('lang') || 'es');
   const [messages, setMessages] = useState([
-    { role: 'ai', content: '¡Hola! Bienvenido a Paradise Premium. Soy tu asistente experto en propiedades de lujo en Medellín. ¿Buscas un apartamento exclusivo, una finca o quizás un yate en Guatapé?' }
+    { role: 'ai', content: '¡Hola! Bienvenido a Paradise Premium. Soy tu experto en estilo de vida de lujo en Medellín. ¿Cómo puedo asistirte hoy con nuestra colección de fincas y apartamentos?' }
   ]);
   const [input, setInput] = useState('');
-  const [lang, setLang] = useState(localStorage.getItem('lang') || 'es');
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {

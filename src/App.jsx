@@ -16,42 +16,9 @@ import PublishPage from './pages/PublishPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
 
 export default function App() {
-  // Load Tawk.to chat widget safely via useEffect (avoids TrustedHTML CSP issues)
+  // Removed old Tawk.to widget to favor modern AICopilot
   useEffect(() => {
-    // Definir configuración antes de cargar el script
-    window.Tawk_API = window.Tawk_API || {};
-    window.Tawk_API.onLoad = function() {
-      window.Tawk_API.setAttributes({
-        'language': 'es'
-      }, function(error){});
-      // Force language after load
-      if (window.Tawk_API.setLanguage) {
-        window.Tawk_API.setLanguage('es');
-      }
-    };
-    // Forzar idioma del visitante y opciones de widget
-    window.Tawk_API.visitor = {
-      language: 'es'
-    };
-    window.Tawk_API.customStyle = {
-      visibility: {
-        desktop: { xOffset: 20, yOffset: 20 },
-        mobile: { xOffset: 10, yOffset: 10 }
-      }
-    };
-
-    const s1 = document.createElement('script');
-    s1.async = true;
-    s1.src = 'https://embed.tawk.to/69c458060976361c3598d20c/default';
-    s1.charset = 'UTF-8';
-    s1.setAttribute('crossorigin', '*');
-    document.body.appendChild(s1);
-    
-    return () => { 
-      try { 
-        // No removemos el script en cada render para evitar parpadeos
-      } catch(e) {} 
-    };
+    // Analytics or other global effects can go here
   }, []);
 
   return (
