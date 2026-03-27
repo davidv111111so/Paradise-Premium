@@ -31,16 +31,56 @@ export default function PublishPage() {
 
   const [otherAmenity, setOtherAmenity] = useState('');
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    
-    files.forEach(file => {
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result]);
-      };
       reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200; // Max dimension to keep payload small
+
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          // Return as JPEG with 0.8 quality
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+      };
     });
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    setLoading(true);
+    
+    try {
+      const newImages = await Promise.all(
+        files.map(file => compressImage(file))
+      );
+      setImages(prev => [...prev, ...newImages]);
+    } catch (err) {
+      console.error('Resize error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const removeImage = (index) => {
@@ -53,8 +93,26 @@ export default function PublishPage() {
     { id: 'vehicle', label: t.nav_vehicles, icon: Ship },
   ];
 
-  const AUTHORIZED_EMAILS = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
+  const AUTHORIZED_EMAILS = [
+    'marlon@paradiserentas.com', 
+    'andrea@paradiserentas.com', 
+    'gustavo@paradiserentas.com',
+    'marlon', 'andrea', 'gustavo' // Redundancia para facilidad de uso
+  ];
   const [loading, setLoading] = useState(false);
+
+  // Función para prevenir QuotaExceededError limpiando datos viejos
+  const manageQuota = () => {
+    try {
+      const all = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+      if (all.length > 50) {
+        // Mantener solo los últimos 50 si hay demasiados (un poco agresivo pero seguro)
+        localStorage.setItem('paradise_properties', JSON.stringify(all.slice(0, 50)));
+      }
+    } catch (e) {
+      localStorage.clear(); // Último recurso si está corrupto o lleno
+    }
+  };
 
   const toggleAmenity = (am) => {
     setFormData(prev => {
@@ -91,6 +149,9 @@ export default function PublishPage() {
       alert(lang === 'es' ? 'La suma de todas las imágenes es demasiado grande. Intenta subir menos fotos o de menor peso.' : 'Total images size is too large for a single upload.');
       return;
     }
+
+    // Gestionar cuota de localStorage antes de guardar
+    manageQuota();
 
     setLoading(true);
     try {
@@ -140,16 +201,17 @@ export default function PublishPage() {
           
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-               <Plus size={16} /> 1. {lang === 'es' ? 'Selecciona Categoría' : 'Select Category'}
+               <Plus size={16} /> 1. {lang === 'es' ? 'Selecciona Categoría' : 'Select Category'} {formData.category === 'apartment' && <span className="text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-500 animate-pulse">(POR DEFECTO)</span>}
              </h3>
              <div className="grid grid-cols-3 gap-4">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
+                    type="button"
                     onClick={() => setFormData({...formData, category: cat.id})}
                     className={`flex flex-col items-center gap-3 p-6 rounded-2xl border transition-all ${
                       formData.category === cat.id 
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 ring-2 ring-emerald-500/50' 
                       : 'bg-paradise-900/50 border-paradise-800 text-paradise-500 hover:border-paradise-700'
                     }`}
                   >

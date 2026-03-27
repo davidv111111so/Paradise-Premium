@@ -24,10 +24,20 @@ export default function App() {
       window.Tawk_API.setAttributes({
         'language': 'es'
       }, function(error){});
+      // Force language after load
+      if (window.Tawk_API.setLanguage) {
+        window.Tawk_API.setLanguage('es');
+      }
     };
-    // Forzar idioma del visitante
+    // Forzar idioma del visitante y opciones de widget
     window.Tawk_API.visitor = {
       language: 'es'
+    };
+    window.Tawk_API.customStyle = {
+      visibility: {
+        desktop: { xOffset: 20, yOffset: 20 },
+        mobile: { xOffset: 10, yOffset: 10 }
+      }
     };
 
     const s1 = document.createElement('script');

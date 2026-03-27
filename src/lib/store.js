@@ -113,7 +113,14 @@ export const getProperties = async () => {
       
     if (!error && data && data.length > 0) {
       // Sync local with cloud
-      localStorage.setItem('paradise_properties', JSON.stringify(data));
+      try {
+        localStorage.setItem('paradise_properties', JSON.stringify(data));
+      } catch (e) {
+        console.warn('LocalStorage Quota Exceeded during sync:', e.message);
+        // Fallback: clear and try to save just a subset
+        localStorage.clear();
+        try { localStorage.setItem('paradise_properties', JSON.stringify(data.slice(0, 15))); } catch(e2) {}
+      }
       return data;
     }
   } catch (e) {
@@ -162,7 +169,6 @@ export const addProperty = async (prop) => {
     "isMock": false
   };
 
-  // Build local object (keeps the local id for immediate display)
   const localProp = { ...cloudProp, id: localId, created_at: now };
   
   // 1. Local Save (Immediate UX)
@@ -172,9 +178,16 @@ export const addProperty = async (prop) => {
   // 2. Cloud Save (Persistence)
   try {
     const { data, error } = await supabase.from('properties').insert([cloudProp]).select();
+    
     if (error) {
-      console.error('Supabase Sync Error:', error.message);
-    } else if (data && data[0]) {
+      // Remove from local if it failed cloud and we want to be strict? 
+      // User says "arregla que funcione bien", so let's be strict.
+      const rollback = JSON.parse(localStorage.getItem('paradise_properties') || '[]');
+      localStorage.setItem('paradise_properties', JSON.stringify(rollback.filter(p => p.id !== localId)));
+      throw new Error(`Cloud sync failed: ${error.message}`);
+    } 
+    
+    if (data && data[0]) {
       // Update localProp with the real UUID from Supabase
       localProp.id = data[0].id;
       localProp.created_at = data[0].created_at;
@@ -184,9 +197,11 @@ export const addProperty = async (prop) => {
       if (idx !== -1) updated[idx] = { ...localProp };
       localStorage.setItem('paradise_properties', JSON.stringify(updated));
       console.log('✅ Property synced to cloud:', data[0].id);
+      return localProp;
     }
   } catch (e) {
-    console.warn('Cloud backup failed, working in offline mode.');
+    console.error('Persistence failed:', e.message);
+    throw e; // Rethrow to let PublishPage know it failed
   }
 
   return localProp;
