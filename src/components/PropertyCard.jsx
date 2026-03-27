@@ -46,11 +46,14 @@ export default function PropertyCard({ property, onDelete }) {
             onClick={(e) => { 
               e.preventDefault(); 
               e.stopPropagation(); 
-              onDelete(id); 
+              if (window.confirm('¿Estás seguro de que deseas eliminar esta propiedad permanentemente?')) {
+                onDelete(id); 
+              }
             }}
-            className="absolute z-20 top-4 right-4 bg-red-500/80 backdrop-blur-md text-white p-3 rounded-full hover:bg-red-600 transition-colors shadow-xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+            className="absolute z-20 top-4 right-4 bg-red-600/90 backdrop-blur-md text-white p-3 rounded-full hover:bg-red-700 transition-all shadow-2xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 border border-white/20"
+            title="Eliminar Propiedad"
           >
-            <Trash2 size={16} />
+            <Trash2 size={18} />
           </button>
         )}
 

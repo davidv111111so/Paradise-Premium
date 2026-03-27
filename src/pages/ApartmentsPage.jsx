@@ -28,9 +28,17 @@ export default function ApartmentsPage() {
     }
   }
 
-  const handleDelete = (id) => {
-    removeProperty(id);
-    fetchProperties();
+  const handleDelete = async (id) => {
+    const email = prompt('Ingrese su correo de socio para autorizar la ELIMINACIÓN:');
+    if (!email) return;
+
+    try {
+      await removeProperty(id, email);
+      alert('Propiedad eliminada correctamente.');
+      fetchProperties();
+    } catch (e) {
+      alert(e.message);
+    }
   };
 
   const filtered = properties.filter(

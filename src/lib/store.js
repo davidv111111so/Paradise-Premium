@@ -207,15 +207,29 @@ export const addProperty = async (prop) => {
   return localProp;
 };
 
-export const removeProperty = (id) => {
-  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-  const updated = all.filter(p => String(p.id) !== String(id));
-  localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
-  
-  // Async Sync to Supabase
-  supabase.from('properties').delete().eq('id', id).then(({ error }) => {
-    if (error) console.warn('Supabase delete sync failed:', error.message);
-  });
+export const removeProperty = async (id, partnerEmail) => {
+  const AUTHORIZED = [
+    'marlon@paradiserentas.com', 'andrea@paradiserentas.com', 'gustavo@paradiserentas.com',
+    'marlon', 'andrea', 'gustavo'
+  ];
 
-  return updated;
+  if (!partnerEmail || !AUTHORIZED.includes(partnerEmail.toLowerCase())) {
+    throw new Error('No autorizado para eliminar propiedades.');
+  }
+
+  // 1. Delete from Supabase
+  try {
+    const { error } = await supabase.from('properties').delete().eq('id', id);
+    if (error) throw error;
+    
+    // 2. Only if cloud succeeds, remove from local cache to prevent re-sync
+    const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+    const updated = all.filter(p => String(p.id) !== String(id));
+    localStorage.setItem('paradise_properties_v4', JSON.stringify(updated));
+    console.log('✅ Property removed from cloud and local cache:', id);
+    return updated;
+  } catch (e) {
+    console.error('Delete failed:', e.message);
+    throw new Error(`Error al eliminar en la nube: ${e.message}`);
+  }
 };

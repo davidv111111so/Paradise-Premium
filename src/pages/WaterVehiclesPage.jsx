@@ -28,9 +28,17 @@ export default function WaterVehiclesPage() {
     }
   }
 
-  const handleDelete = (id) => {
-    removeProperty(id);
-    fetchVehicles();
+  const handleDelete = async (id) => {
+    const email = prompt('Ingrese su correo de socio para autorizar la ELIMINACIÓN:');
+    if (!email) return;
+
+    try {
+      await removeProperty(id, email);
+      alert('Vehículo/Propiedad eliminada correctamente.');
+      fetchVehicles();
+    } catch (e) {
+      alert(e.message);
+    }
   };
 
   const filtered = vehicles.filter(
