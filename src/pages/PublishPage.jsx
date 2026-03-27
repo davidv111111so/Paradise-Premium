@@ -131,9 +131,16 @@ export default function PublishPage() {
     if (!rawEmail) return;
     
     const userEmail = rawEmail.trim().toLowerCase();
+    
+    // Check if the input contains any of our partner names or the official domain
+    const isPartner = AUTHORIZED_EMAILS.some(name => userEmail.includes(name)) || 
+                     userEmail.endsWith('@paradiserentas.com') ||
+                     userEmail === 'andrea'; // Direct fallback for her
 
-    if (!AUTHORIZED_EMAILS.includes(userEmail)) {
-      alert(lang === 'es' ? 'Solo Marlon, Andrea y Gustavo pueden publicar propiedades.' : 'Only Marlon, Andrea, and Gustavo can publish.');
+    if (!isPartner) {
+      alert(lang === 'es' 
+        ? `Solo Marlon, Andrea y Gustavo pueden publicar. (Recibido: ${userEmail})` 
+        : `Only Marlon, Andrea, and Gustavo can publish. (Received: ${userEmail})`);
       return;
     }
 
@@ -174,7 +181,7 @@ export default function PublishPage() {
         isMock: false
       };
 
-      const created = await addProperty(newProp);
+      const created = await addProperty(newProp, userEmail);
       alert(lang === 'es' ? '¡Propiedad publicada con éxito! Ya puedes verla en tu catálogo.' : 'Property published successfully!');
       navigate(`/property/${created.id}`);
     } catch (error) {

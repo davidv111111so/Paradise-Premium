@@ -146,7 +146,7 @@ export const getProperty = async (id) => {
   return all.find(p => String(p.id) === String(id));
 };
 
-export const addProperty = async (prop) => {
+export const addProperty = async (prop, authorEmail) => {
   const localId = Date.now().toString();
   const now = new Date().toISOString();
 
@@ -166,7 +166,8 @@ export const addProperty = async (prop) => {
     amenities: prop.amenities || [],
     images: prop.images || [],
     status: prop.status || 'available',
-    "isMock": false
+    "isMock": false,
+    author_email: authorEmail || 'system'
   };
 
   const localProp = { ...cloudProp, id: localId, created_at: now };
