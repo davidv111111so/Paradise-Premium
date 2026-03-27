@@ -166,8 +166,7 @@ export const addProperty = async (prop, authorEmail) => {
     amenities: prop.amenities || [],
     images: prop.images || [],
     status: prop.status || 'available',
-    "isMock": false,
-    author_email: authorEmail || 'system'
+    "isMock": false
   };
 
   const localProp = { ...cloudProp, id: localId, created_at: now };
