@@ -7,41 +7,48 @@ import {
   FileText,
   TrendingUp,
   Sparkles,
-  Lock
+  Lock,
+  Layers,
+  BarChart3
 } from 'lucide-react';
 import VirtualStaging from '../modules/VirtualStaging';
 import DescriptionGenerator from '../modules/DescriptionGenerator';
 import ValuationAI from '../modules/ValuationAI';
+import FinancialCalculator from '../modules/FinancialCalculator';
+import ListingsManager from '../modules/ListingsManager';
 import { supabase } from '../lib/supabase';
+import { isAuthorized } from '../lib/store';
+import PartnerAuthModal from '../components/PartnerAuthModal';
+import { useOutletContext } from 'react-router-dom';
 
 export default function AICenterPage() {
+  const { lang, t } = useOutletContext();
   const [activeTab, setActiveTab] = useState('staging');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(true);
 
-  useEffect(() => {
-    const userEmail = prompt('Centro IA - Acceso Restringido\nIngrese su correo de socio para autorizar:');
-    const AUTHORIZED = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
-    
-    if (AUTHORIZED.includes(userEmail)) {
+  const onConfirmAuth = (rawEmail) => {
+    setIsAuthModalOpen(false);
+    if (isAuthorized(rawEmail)) {
       setIsAdmin(true);
-      setLoading(false);
     } else {
-      alert('Solo Marlon, Andrea y Gustavo pueden acceder al Centro IA.');
+      alert(lang === 'es' 
+        ? 'Acceso restringido. Solo socios autorizados.' 
+        : 'Restricted access. Authorized partners only.');
       window.location.href = '/';
     }
-  }, []);
+  };
 
   const TABS = [
     { id: 'staging', label: 'Staging Virtual', icon: ImagePlus, component: VirtualStaging, adminOnly: false },
     { id: 'description', label: 'Generador IA', icon: FileText, component: DescriptionGenerator, adminOnly: true },
     { id: 'valuation', label: 'Tasación Renta', icon: TrendingUp, component: ValuationAI, adminOnly: false },
+    { id: 'calculator', label: 'Calculadora ROI', icon: BarChart3, component: FinancialCalculator, adminOnly: false },
+    { id: 'manager', label: 'Gestión Inventario', icon: Layers, component: ListingsManager, adminOnly: true },
   ];
 
   const visibleTabs = TABS.filter(tab => !tab.adminOnly || (tab.adminOnly && isAdmin));
   const ActiveComponent = TABS.find((t) => t.id === activeTab)?.component || VirtualStaging;
-
-  if (loading) return <div className="p-10 text-paradise-400">Verificando acceso...</div>;
 
   return (
     <div className="p-6 md:p-10 animate-fade-in">
@@ -82,6 +89,13 @@ export default function AICenterPage() {
       <div className="max-w-4xl">
         <ActiveComponent />
       </div>
+
+      <PartnerAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => window.location.href = '/'} 
+        onConfirm={onConfirmAuth}
+        lang={lang}
+      />
     </div>
   );
 }

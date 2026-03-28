@@ -31,15 +31,18 @@ export default function WaterVehiclesPage() {
   }
 
   const handleDelete = async (id) => {
-    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la ELIMINACIÓN:');
+    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la eliminación:');
     if (!email) return;
+
+    if (!confirm('¿Seguro que quieres borrar esta propiedad permanentemente?')) return;
 
     try {
       await removeProperty(id, email);
-      alert('Vehículo/Propiedad eliminada correctamente.');
+      alert('Propiedad eliminada correctamente.');
       fetchVehicles();
     } catch (e) {
-      alert(e.message);
+      console.error(e);
+      alert(`Error al eliminar: ${e.message}`);
     }
   };
 

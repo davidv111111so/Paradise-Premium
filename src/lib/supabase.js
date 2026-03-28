@@ -3,16 +3,19 @@
 // --------------------------------------------------------
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
 
-if (!supabaseUrl || !supabaseKey) {
-  console.warn(
-    '[Paradise] Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env'
-  );
-}
+// Singleton instance
+export let supabase = createClient(supabaseUrl, supabaseKey);
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-key'
-);
+/**
+ * Updates the Supabase client with a partner secret header for RLS verification.
+ */
+export const authorizeSupabase = (secret = 'paradise-premium-secret-2024') => {
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    global: {
+      headers: { 'x-partner-secret': secret }
+    }
+  });
+};

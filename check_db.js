@@ -8,16 +8,16 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 import fs from 'fs'
 
 async function check() {
-  const { data: properties, error: prError } = await supabase.from('properties').select('id, title, category, created_at').order('created_at', { ascending: false })
+  const { data: properties, error: prError } = await supabase.from('properties').select('*').limit(1)
   if (prError) {
     fs.writeFileSync('result_final.txt', 'Error: ' + JSON.stringify(prError))
     return
   }
-  let out = `Total: ${properties.length}\n`
-  for (const p of properties) {
-    out += `${p.id} | ${p.title} | ${p.category} | ${p.created_at}\n`
+  if (properties && properties[0]) {
+    fs.writeFileSync('result_final.txt', 'Columns: ' + Object.keys(properties[0]).join(', '))
+  } else {
+    fs.writeFileSync('result_final.txt', 'No data found.')
   }
-  fs.writeFileSync('result_final.txt', out)
 }
 
 check()

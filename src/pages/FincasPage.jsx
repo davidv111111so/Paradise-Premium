@@ -31,15 +31,18 @@ export default function FincasPage() {
   }
 
   const handleDelete = async (id) => {
-    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la ELIMINACIÓN:');
+    const email = prompt('Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar la eliminación:');
     if (!email) return;
+
+    if (!confirm('¿Seguro que quieres borrar esta propiedad permanentemente?')) return;
 
     try {
       await removeProperty(id, email);
       alert('Propiedad eliminada correctamente.');
       fetchFincas();
     } catch (e) {
-      alert(e.message);
+      console.error(e);
+      alert(`Error al eliminar: ${e.message}`);
     }
   };
 

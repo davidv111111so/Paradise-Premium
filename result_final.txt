@@ -1,5 +1,1 @@
-Total: 4
-de59b17b-f0cd-4159-9e29-5aad5f035d69 | Propiedad sin título | finca | 2026-03-26T23:08:14.855257+00:00
-3ca036bd-e2ba-4e9e-975c-e7699349e08a | Propiedad sin título | apartment | 2026-03-26T23:03:54.236338+00:00
-2effe394-6e8d-4604-8a3a-7975c0f77584 | Nuevo apt Frontera | apartment | 2026-03-26T20:01:58.853293+00:00
-7f79e185-b1ab-47da-b3db-34555931e8b4 | TEST Propiedad de Prueba | apartment | 2026-03-26T19:22:59.432392+00:00
+Columns: id, created_at, title, price, location, neighborhood, description, category, videoUrl, bedrooms, bathrooms, area_m2, capacity, amenities, images, status, isMock

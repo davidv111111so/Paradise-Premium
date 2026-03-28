@@ -89,16 +89,14 @@ export default function MainLayout() {
               <Globe size={20} />
             </button>
 
-            {/* Restricted Publish Button */}
-            {['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'].includes('marlon@paradise.com') && (
-              <NavLink 
-                to="/publish" 
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95"
-                style={{ boxShadow: '0 4px 25px -4px rgba(16,185,129,0.4)' }}
-              >
-                {t.nav_publish}
-              </NavLink>
-            )}
+            {/* Publish Button — Access is protected by modal within the page */}
+            <NavLink 
+              to="/publish" 
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95"
+              style={{ boxShadow: '0 4px 25px -4px rgba(16,185,129,0.4)' }}
+            >
+              {t.nav_publish}
+            </NavLink>
             
             <button className="xl:hidden p-3 bg-white/10 rounded-full text-white" onClick={() => setMobileOpen(true)}>
               <Menu size={22} />

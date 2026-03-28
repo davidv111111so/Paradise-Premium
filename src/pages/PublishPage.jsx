@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil } from 'lucide-react';
 import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
-import { addProperty, getProperty, updateProperty } from '../lib/store';
+import { addProperty, getProperty, updateProperty, isAuthorized } from '../lib/store';
+import PartnerAuthModal from '../components/PartnerAuthModal';
 
 export default function PublishPage() {
   const { lang, t } = useOutletContext();
@@ -14,7 +15,7 @@ export default function PublishPage() {
   const [formData, setFormData] = useState({
     title: '',
     price: '',
-    location: '',
+    neighborhood: '',
     description: '',
     category: 'apartment',
     videoUrl: '',
@@ -27,6 +28,7 @@ export default function PublishPage() {
   });
 
   const [otherAmenity, setOtherAmenity] = useState('');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Load property if editing
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function PublishPage() {
               title: prop.title || '',
               price: String(prop.price || ''),
               location: prop.location || '',
+              neighborhood: prop.neighborhood || '',
               description: prop.description || '',
               category: prop.category || 'apartment',
               videoUrl: prop.videoUrl || '',
@@ -81,7 +84,7 @@ export default function PublishPage() {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const maxDim = 1200; 
+          const maxDim = 1000; 
 
           if (width > height) {
             if (width > maxDim) {
@@ -99,7 +102,7 @@ export default function PublishPage() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
         };
       };
     });
@@ -155,19 +158,17 @@ export default function PublishPage() {
     });
   };
 
-  const handlePublish = async () => {
-    const rawEmail = prompt(lang === 'es' ? 'Autorización: Ingrese "andrea", "marlon" o "gustavo" para confirmar:' : 'Authorization: Enter "andrea", "marlon" or "gustavo" to confirm:');
-    if (!rawEmail) return;
-    
-    const userEmail = rawEmail.trim().toLowerCase();
-    const isPartner = AUTHORIZED_EMAILS.some(name => userEmail.includes(name)) || 
-                     userEmail.endsWith('@paradiserentas.com') ||
-                     userEmail === 'andrea';
+  const handlePublish = () => {
+    setIsAuthModalOpen(true);
+  };
 
-    if (!isPartner) {
+  const onConfirmAuth = async (rawEmail) => {
+    setIsAuthModalOpen(false);
+    
+    if (!isAuthorized(rawEmail)) {
       alert(lang === 'es' 
-        ? `No autorizado. (Recibido: ${userEmail})` 
-        : `Unauthorized. (Received: ${userEmail})`);
+        ? `No autorizado. (Identidad no reconocida)` 
+        : `Unauthorized. (Identity not recognized)`);
       return;
     }
 
@@ -178,7 +179,7 @@ export default function PublishPage() {
         title: formData.title || 'Propiedad sin título',
         price: parseInt(priceClean || 0),
         location: formData.location || 'Medellín',
-        neighborhood: formData.location || 'Medellín',
+        neighborhood: formData.neighborhood || formData.location || 'Medellín',
         description: formData.description || '',
         category: formData.category,
         videoUrl: formData.videoUrl,
@@ -192,12 +193,15 @@ export default function PublishPage() {
       };
 
       if (editId) {
-        await updateProperty(editId, propData);
+        // Fetch current property to ensure we don't lose extra fields during merge
+        const currentProp = await getProperty(editId);
+        const mergedData = { ...currentProp, ...propData };
+        await updateProperty(editId, mergedData);
         alert(lang === 'es' ? '¡Propiedad actualizada con éxito!' : 'Property updated successfully!');
         navigate(`/property/${editId}`);
       } else {
         manageQuota();
-        const created = await addProperty(propData, userEmail);
+        const created = await addProperty(propData, rawEmail);
         alert(lang === 'es' ? '¡Propiedad publicada con éxito!' : 'Property published successfully!');
         navigate(`/property/${created.id}`);
       }
@@ -276,9 +280,10 @@ export default function PublishPage() {
             </h3>
             <div className="space-y-6">
               <input type="text" placeholder={lang === 'es' ? "Título del anuncio (ej. Penthouse en El Poblado)" : "Listing Title"} className="input-field" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-              <div className="grid grid-cols-2 gap-4">
-                <input type="text" placeholder={lang === 'es' ? "Precio (COP)" : "Price (COP)"} className="input-field" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-                <input type="text" placeholder={lang === 'es' ? "Barrio / Sector / Ciudad" : "Neighborhood"} className="input-field" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+              <div className="grid grid-cols-3 gap-4">
+                <input type="text" placeholder={lang === 'es' ? "Precio (COP)" : "Price (COP)"} className="input-field col-span-1" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+                <input type="text" placeholder={lang === 'es' ? "Ciudad" : "City"} className="input-field col-span-1" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                <input type="text" placeholder={lang === 'es' ? "Barrio / Sector" : "Neighborhood"} className="input-field col-span-1" value={formData.neighborhood} onChange={e => setFormData({...formData, neighborhood: e.target.value})} />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
@@ -387,6 +392,12 @@ export default function PublishPage() {
           </button>
         </div>
       </div>
+      <PartnerAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onConfirm={onConfirmAuth}
+        lang={lang}
+      />
     </div>
   );
 }

@@ -24,7 +24,12 @@ const translations = {
     cat_vehicles: 'Vehículos Acuáticos',
     cat_listings: 'listings disponibles',
     cat_see_all: 'Ver Todo',
-    explore_cat: 'Explora Nuestras Categorías'
+    explore_cat: 'Explora Nuestras Categorías',
+    partner_access: 'Acceso de Socio',
+    partner_verify: 'Confirmar Identidad',
+    partner_pin: 'PIN de Acceso',
+    partner_unauthorized: 'No autorizado. Identidad no reconocida.',
+    delete_confirm: '¿Estás seguro de eliminar esta propiedad permanentemente?'
   },
   en: {
     heroTitle_1: 'Find your',
@@ -48,7 +53,12 @@ const translations = {
     cat_vehicles: 'Water Vehicles',
     cat_listings: 'listings available',
     cat_see_all: 'See All',
-    explore_cat: 'Explore Our Categories'
+    explore_cat: 'Explore Our Categories',
+    partner_access: 'Partner Access',
+    partner_verify: 'Confirm Identity',
+    partner_pin: 'Access PIN',
+    partner_unauthorized: 'Unauthorized. Identity not recognized.',
+    delete_confirm: 'Are you sure you want to delete this property permanently?'
   }
 };
 

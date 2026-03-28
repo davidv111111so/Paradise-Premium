@@ -11,9 +11,9 @@ const CATEGORIES = [
   { id: 'water', icon: Ship, to: '/water-vehicles' },
 ];
 
+import { getProperties, removeProperty, isAuthorized } from '../lib/store';
 import { Trash2 } from 'lucide-react';
-
-import { getProperties, removeProperty } from '../lib/store';
+import PartnerAuthModal from '../components/PartnerAuthModal';
 
 export default function HomePage() {
   const { lang, t } = useOutletContext();
@@ -23,18 +23,33 @@ export default function HomePage() {
     getProperties().then(props => setRecentProperties(props.slice(0, 4)));
   }, []);
 
-  const handleDelete = (id) => {
-    const userEmail = prompt(lang === 'es' ? 'Ingrese su correo de socio para autorizar la eliminación:' : 'Enter partner email to authorize deletion:');
-    const AUTHORIZED = ['marlon@paradise.com', 'andrea@paradise.com', 'gustavo@paradise.com'];
-    
-    if (!AUTHORIZED.includes(userEmail)) {
-      alert(lang === 'es' ? 'No autorizado.' : 'Unauthorized.');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+ 
+  const handleDeleteTrigger = (id) => {
+    setPendingDeleteId(id);
+    setIsAuthModalOpen(true);
+  };
+ 
+  const onConfirmAuthDelete = async (rawEmail) => {
+    setIsAuthModalOpen(false);
+     
+    if (!isAuthorized(rawEmail)) {
+      alert(t.partner_unauthorized);
       return;
     }
-
-    if (confirm(lang === 'es' ? '¿Seguro que quieres borrar esta propiedad?' : 'Are you sure you want to delete this property?')) {
-      removeProperty(id);
-      getProperties().then(props => setRecentProperties(props.slice(0, 4)));
+ 
+    if (confirm(t.delete_confirm)) {
+      try {
+        await removeProperty(pendingDeleteId, rawEmail);
+        const props = await getProperties();
+        setRecentProperties(props.slice(0, 4));
+        alert(lang === 'es' ? 'Propiedad eliminada.' : 'Property deleted.');
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        setPendingDeleteId(null);
+      }
     }
   };
 
@@ -184,20 +199,25 @@ export default function HomePage() {
                      </div>
                    </Link>
 
-                   {/* Delete Trigger */}
-                   {prop.isMock && (
-                     <button 
-                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(prop.id); }}
-                       className="absolute z-20 top-6 right-6 bg-red-500/80 backdrop-blur-md text-white p-4 rounded-full hover:bg-red-600 transition-all shadow-2xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
-                     >
-                       <Trash2 size={20} />
-                     </button>
-                   )}
+                   {/* Delete Trigger — Visible to Partners */}
+                   <button 
+                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTrigger(prop.id); }}
+                     className="absolute z-20 top-6 right-6 bg-red-500/80 backdrop-blur-md text-white p-4 rounded-full hover:bg-red-600 transition-all shadow-2xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                   >
+                     <Trash2 size={20} />
+                   </button>
                 </div>
               ))}
            </div>
         </div>
       </section>
+
+      <PartnerAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onConfirm={onConfirmAuthDelete}
+        lang={lang}
+      />
     </div>
   );
 }

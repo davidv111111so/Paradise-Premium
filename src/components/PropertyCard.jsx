@@ -1,4 +1,4 @@
-import { MapPin, Bed, Bath, Maximize, PawPrint, Trash2, Pencil } from 'lucide-react';
+import { MapPin, Bed, Bath, Maximize, PawPrint, Trash2, Pencil, Gem } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function PropertyCard({ property, onDelete, onEdit }) {
@@ -32,6 +32,7 @@ export default function PropertyCard({ property, onDelete, onEdit }) {
     house: 'Casa',
     finca: 'Finca',
     vehicle: 'Vehículo Acuático',
+    water_vehicle: 'Vehículo Acuático',
   };
 
   return (
@@ -97,8 +98,9 @@ export default function PropertyCard({ property, onDelete, onEdit }) {
 
           {/* Content */}
           <div className="flex flex-col p-6 flex-1">
-            <h3 className="text-xl font-bold text-paradise-50 mb-3 line-clamp-1 group-hover:text-emerald-400 transition-colors" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {isMock ? `(X) ${title}` : title}
+            <h3 className={`text-xl font-bold mb-3 line-clamp-1 transition-colors ${isMock ? 'text-paradise-200 opacity-60' : 'text-white font-serif group-hover:text-amber-400'}`} style={{ fontFamily: "'Playfair Display', serif" }}>
+              {isMock ? `(MOCK) ${title}` : title}
+              {!isMock && <span className="ml-2 inline-flex items-center text-[10px] text-emerald-400 font-black uppercase tracking-widest"><Gem size={12} className="mr-1" /> EXCLUSIVE</span>}
             </h3>
             <div className="flex items-center gap-2 text-paradise-300 text-sm font-medium mb-6">
               <MapPin size={16} className="text-emerald-500" />
