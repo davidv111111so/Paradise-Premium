@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import AICopilotBubble from '../components/AICopilotBubble';
+import Footer from '../components/Footer';
 import translations from '../lib/translations';
 
 export default function MainLayout() {
@@ -111,6 +112,8 @@ export default function MainLayout() {
       <main className="flex-1">
         <Outlet context={{ lang, t }} />
       </main>
+
+      <Footer lang={lang} t={t} />
 
       <AICopilotBubble lang={lang} />
 

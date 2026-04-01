@@ -14,6 +14,8 @@ import AboutPage from './pages/AboutPage';
 import MedellinGuidePage from './pages/MedellinGuidePage';
 import PublishPage from './pages/PublishPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 export default function App() {
   // Removed old Tawk.to widget to favor modern AICopilot
@@ -35,6 +37,8 @@ export default function App() {
           <Route path="ai-center" element={<AICenterPage />} />
           <Route path="publish" element={<PublishPage />} />
           <Route path="property/:id" element={<PropertyDetailPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
