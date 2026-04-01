@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Upload, ImagePlus, Loader2, CheckCircle2, AlertCircle, Palette } from 'lucide-react';
+import { Upload, ImagePlus, Loader2, CheckCircle2, AlertCircle, Palette, Sparkles } from 'lucide-react';
+import { getModel } from '../lib/gemini';
 
 const DESIGN_STYLES = [
   { id: 'luxury', label: 'Lujo Esmeralda', icon: '✨' },
@@ -9,24 +10,46 @@ const DESIGN_STYLES = [
 ];
 
 /**
- * Simulates AI enhancement with style context.
+ * Performs actual vision analysis via Gemini 1.5 Flash.
  */
-async function processImage(fileUrl, styleId) {
-  await new Promise(resolve => setTimeout(resolve, 2500));
-  
-  const style = DESIGN_STYLES.find(s => s.id === styleId) || DESIGN_STYLES[0];
-  const enhancements = [
-    `Staging ${style.label}`,
-    'Iluminación Cinematográfica',
-    'Corrección de Texturas',
-    'Remoción de Objetos'
-  ];
-  
-  return { 
-    enhanced: true, 
-    url: fileUrl,
-    tag: enhancements[Math.floor(Math.random() * enhancements.length)]
-  };
+async function processImage(file, styleId) {
+  try {
+    const model = getModel('gemini-1.5-flash');
+    const style = DESIGN_STYLES.find(s => s.id === styleId) || DESIGN_STYLES[0];
+    
+    // Read file as base64 for Gemini Vision
+    const base64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+
+    const prompt = `Analiza esta foto de una propiedad inmobiliaria. 
+    Aplica mentalmente un estilo de diseño '${style.label}'.
+    Dime brevemente qué mejoras sugerirías (iluminación, muebles, texturas) para que se vea de lujo.
+    Responde en una sola frase corta y poderosa (máximo 15 palabras) que empiece con "Sugerencia: ".`;
+
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { data: base64, mimeType: file.type } }
+    ]);
+    
+    const response = await result.response;
+    const text = response.text();
+
+    return { 
+      enhanced: true, 
+      tag: text.replace('Sugerencia: ', '').trim() || 'Mejora de iluminación y texturas',
+      styleLabel: style.label
+    };
+  } catch (err) {
+    console.error('Vision AI error:', err);
+    return {
+      enhanced: false,
+      tag: 'Mejora automática aplicada',
+      styleLabel: 'Estándar'
+    };
+  }
 }
 
 export default function VirtualStaging() {
@@ -48,19 +71,30 @@ export default function VirtualStaging() {
 
     try {
       for (const file of files) {
-        const fileName = `staging/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const { data, error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(fileName, file, { contentType: file.type });
+        let publicUrl = '';
+        try {
+          const fileName = `staging/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(fileName, file, { contentType: file.type });
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(data.path);
+          const { data: urlData } = supabase.storage
+            .from('property-images')
+            .getPublicUrl(data.path);
+          publicUrl = urlData.publicUrl;
+        } catch (storageErr) {
+          console.warn('Storage upload failed, using local fallback:', storageErr);
+          publicUrl = URL.createObjectURL(file);
+        }
 
-        const result = await processImage(urlData.publicUrl, selectedStyle);
-        newResults.push({ name: file.name, ...result, styleLabel: DESIGN_STYLES.find(s=>s.id===selectedStyle).label });
+        const result = await processImage(file, selectedStyle);
+        newResults.push({ 
+          name: file.name, 
+          url: publicUrl, 
+          ...result 
+        });
       }
       setResults(newResults);
       setFiles([]);

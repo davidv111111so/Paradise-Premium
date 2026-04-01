@@ -23,7 +23,8 @@ export default function DescriptionGenerator() {
     city: '',
     amenities: [],
     style: 'luxury',
-    audience: 'investors'
+    audience: 'investors',
+    custom_info: ''
   });
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,6 +53,8 @@ DETALLES DE LA PROPIEDAD:
 - Ciudad: ${form.city || 'No especificado'}
 - Amenidades: ${form.amenities.length ? form.amenities.join(', ') : 'No especificadas'}
 - Estilo: ${form.style === 'luxury' ? 'Elegancia Clásica' : form.style === 'modern' ? 'Minimalista Moderno' : 'Acogedor'}
+- Información Extra (Libre): ${form.custom_info || 'Ninguna'}
+- Objetivo: Convencer a ${audienceLabel} de por qué esta es su mejor opción.
 
 REQUISITOS DEL OUTPUT:
 - 3 a 4 párrafos sofisticados.
@@ -105,6 +108,19 @@ Genera el copy ahora:`;
           <label className="text-[10px] font-bold text-accent-400 uppercase tracking-widest ml-1">Área m²</label>
           <input type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="150" className="w-full px-4 py-3 rounded-xl bg-paradise-800/60 border border-paradise-700/50 text-paradise-100 outline-none focus:border-accent-500/50 transition-all shadow-inner" />
         </div>
+      </div>
+
+      {/* Free Info Field */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-bold text-accent-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+          Información Libre <span className="text-paradise-500 font-normal lowercase">(detalles únicos, historia, vistas...)</span>
+        </label>
+        <textarea
+          value={form.custom_info}
+          onChange={(e) => setForm({ ...form, custom_info: e.target.value })}
+          placeholder="Ej: Tiene vista directa al Parque Lleras, remodelado el año pasado, mármol italiano en la cocina..."
+          className="w-full h-24 px-4 py-3 rounded-xl bg-paradise-800/60 border border-paradise-700/50 text-paradise-100 outline-none focus:border-accent-500/50 transition-all shadow-inner resize-none text-sm"
+        />
       </div>
 
       {/* Audience Selector */}

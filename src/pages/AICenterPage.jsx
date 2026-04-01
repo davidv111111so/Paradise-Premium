@@ -15,7 +15,7 @@ import VirtualStaging from '../modules/VirtualStaging';
 import DescriptionGenerator from '../modules/DescriptionGenerator';
 import ValuationAI from '../modules/ValuationAI';
 import FinancialCalculator from '../modules/FinancialCalculator';
-import ListingsManager from '../modules/ListingsManager';
+import InventoryManager from '../modules/InventoryManager';
 import { supabase } from '../lib/supabase';
 import { isAuthorized } from '../lib/store';
 import PartnerAuthModal from '../components/PartnerAuthModal';
@@ -43,8 +43,8 @@ export default function AICenterPage() {
     { id: 'staging', label: 'Staging Virtual', icon: ImagePlus, component: VirtualStaging, adminOnly: false },
     { id: 'description', label: 'Generador IA', icon: FileText, component: DescriptionGenerator, adminOnly: true },
     { id: 'valuation', label: 'Tasación Renta', icon: TrendingUp, component: ValuationAI, adminOnly: false },
-    { id: 'calculator', label: 'Calculadora ROI', icon: BarChart3, component: FinancialCalculator, adminOnly: false },
-    { id: 'manager', label: 'Gestión Inventario', icon: Layers, component: ListingsManager, adminOnly: true },
+    { id: 'calculator', label: 'Calculadora Pro', icon: BarChart3, component: FinancialCalculator, adminOnly: false },
+    { id: 'manager', label: 'Gestión Inventario', icon: Layers, component: InventoryManager, adminOnly: true },
   ];
 
   const visibleTabs = TABS.filter(tab => !tab.adminOnly || (tab.adminOnly && isAdmin));

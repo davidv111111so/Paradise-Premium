@@ -32,7 +32,7 @@ const SAFETY_SETTINGS = [
   },
 ];
 
-export function getModel(modelName = 'gemini-2.0-flash') {
+export function getModel(modelName = 'gemini-1.5-flash') {
   if (!genAI) {
     throw new Error('Gemini API key not configured. Check your .env file.');
   }
