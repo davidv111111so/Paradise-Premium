@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil } from 'lucide-react';
+import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil, Star } from 'lucide-react';
 import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { addProperty, getProperty, updateProperty, isAuthorized } from '../lib/store';
 import PartnerAuthModal from '../components/PartnerAuthModal';
@@ -125,6 +125,15 @@ export default function PublishPage() {
 
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const setAsMain = (index) => {
+    if (index === 0) return;
+    setImages(prev => {
+      const newImages = [...prev];
+      const selected = newImages.splice(index, 1)[0];
+      return [selected, ...newImages];
+    });
   };
 
   const CATEGORIES = [
@@ -259,11 +268,36 @@ export default function PublishPage() {
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
               {images.map((img, index) => (
-                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden group">
+                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden group border border-paradise-800 transition-all hover:border-emerald-500/50">
                   <img src={img} alt="Preview" className="w-full h-full object-cover" />
-                  <button onClick={() => removeImage(index)} className="absolute top-2 right-2 p-2 bg-red-500/80 rounded-xl text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Trash2 size={16} />
-                  </button>
+                  
+                  {/* Overlay Actions */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    {index !== 0 && (
+                      <button 
+                        onClick={() => setAsMain(index)} 
+                        className="p-3 bg-emerald-500 rounded-xl text-paradise-950 hover:bg-emerald-400 transition-colors shadow-lg"
+                        title={lang === 'es' ? 'Poner como principal' : 'Set as main'}
+                      >
+                        <Star size={18} fill="currentColor" />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => removeImage(index)} 
+                      className="p-3 bg-red-500/80 rounded-xl text-white hover:bg-red-600 transition-colors shadow-lg"
+                      title={lang === 'es' ? 'Eliminar' : 'Remove'}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+
+                  {/* Main Badge */}
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-emerald-500 text-paradise-950 text-[8px] font-black uppercase tracking-tighter rounded-lg shadow-lg flex items-center gap-1">
+                      <Star size={10} fill="currentColor" />
+                      {lang === 'es' ? 'PRINCIPAL' : 'MAIN'}
+                    </div>
+                  )}
                 </div>
               ))}
               <label className="aspect-square rounded-2xl border-2 border-dashed border-paradise-800 hover:border-emerald-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-paradise-900/30 group">

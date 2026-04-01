@@ -20,7 +20,8 @@ export default function AICopilotBubble() {
     if (!input.trim() || loading) return;
 
     const userMsg = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+    const currentHistory = [...messages, userMsg];
+    setMessages(currentHistory);
     setInput('');
     setLoading(true);
 
@@ -30,22 +31,29 @@ export default function AICopilotBubble() {
         return;
       }
 
-      const prompt = `Eres el Agente Oficial de Paradise Premium Rentals en Medellín, Colombia. 
-      Tu nombre es Paradise Copilot. Tu tono es extremadamente profesional, servicial y sofisticado.
+      // Maintain last 8 messages for context
+      const historyContext = currentHistory.slice(-8).map(m => 
+        `${m.role === 'user' ? 'Usuario' : 'Paradise Copilot'}: ${m.content}`
+      ).join('\n');
+
+      const prompt = `Eres Paradise Copilot, el Agente Oficial de Inteligencia Artificial de Paradise Premium Rentals en Medellín, Colombia. 
+      Tu tono es extremadamente sofisticado, profesional y exclusivo.
       
-      CONOCIMIENTO DE LA EMPRESA:
-      - Ofrecemos los apartamentos, casas y fincas más exclusivos de Medellín (El Poblado, Guatapé, Santa Fe de Antioquia).
-      - También gestionamos vehículos acuáticos de lujo en la represa de Guatapé.
-      - Nuestros socios directos son Andrea y Gustavo. Si alguien quiere reservar o ver una propiedad, dile que deben contactarlos directamente.
-      - Andrea y Gustavo son expertos en hospitalidad premium.
+      MISIÓN:
+      - Ayudar a los usuarios a encontrar las mejores propiedades de lujo (Apartamentos, Fincas, Casas).
+      - Promover el estilo de vida exclusivo de Medellín, centrado en El Poblado, Guatapé y Santa Fe de Antioquia.
+      - Facilitar el contacto con los socios fundadores: Andrea y Gustavo.
       
-      REGLAS DE RESPUESTA:
-      - Responde SIEMPRE en Español, a menos que el usuario te hable en Inglés.
-      - Sé conciso pero elegante.
-      - Para ver el catálogo completo, indícales que usen el menú de arriba ("Apartamentos", "Fincas", "Vehículos").
-      - No inventes precios. Si preguntan, diles que pueden verlos en los detalles de cada propiedad o consultarlo con un socio.
+      REGLAS CRÍTICAS:
+      1. Responde SIEMPRE en Español, a menos que el usuario use Inglés.
+      2. No inventes precios. Si preguntan por costos, refiere al catálogo o a los socios.
+      3. Sé conciso. No uses más de 3 párrafos.
+      4. Si el usuario quiere reservar, indica que debe hablar con Andrea o Gustavo.
       
-      Usuario pregunta: "${input}"`;
+      CONTEXTO DE LA CONVERSACIÓN:
+      ${historyContext}
+      
+      Instrucción Final: Genera la respuesta del Copilot siguiendo tu identidad exclusiva.`;
 
       const result = await geminiModel.generateContent(prompt);
       const response = await result.response;
@@ -54,10 +62,14 @@ export default function AICopilotBubble() {
       setMessages(prev => [...prev, { role: 'ai', content: text }]);
     } catch (error) {
       console.error('Gemini Error:', error);
-      setMessages(prev => [...prev, { role: 'ai', content: 'Lo siento, tuve un pequeño problema de conexión. ¿Podrías repetirme eso?' }]);
+      setMessages(prev => [...prev, { role: 'ai', content: 'Mis disculpas, he experimentado una breve interrupción en mis sistemas. ¿Podría repetir su consulta?' }]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearChat = () => {
+    setMessages([{ role: 'ai', content: '¡Hola de nuevo! Chat reiniciado. ¿En qué más puedo asistirte hoy?' }]);
   };
 
   return (
@@ -75,9 +87,18 @@ export default function AICopilotBubble() {
                   <p className="text-[9px] text-accent-400 font-bold uppercase">Online Now</p>
                 </div>
              </div>
-             <button onClick={() => setIsOpen(false)} className="text-paradise-400 hover:text-paradise-100">
-               <X size={20} />
-             </button>
+             <div className="flex items-center gap-2">
+               <button 
+                 onClick={clearChat}
+                 className="text-[10px] font-black text-accent-400 uppercase tracking-tighter bg-accent-500/10 px-2 py-1 rounded-lg hover:bg-accent-500/20 transition-all border border-accent-500/20 mr-2"
+                 title="Limpiar Conversación"
+               >
+                 Reiniciar
+               </button>
+               <button onClick={() => setIsOpen(false)} className="text-paradise-400 hover:text-paradise-100 transition-colors">
+                 <X size={20} />
+               </button>
+             </div>
            </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
