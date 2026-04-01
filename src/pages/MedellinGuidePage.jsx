@@ -52,11 +52,32 @@ const CONTENT = {
   }
 };
 
+const HIDDEN_GEMS = [
+  { 
+    name: 'Pergamino Cafe', 
+    type: 'Café de Especialidad', 
+    desc: 'El epicentro de la cultura del café en El Poblado.',
+    img: 'https://images.unsplash.com/photo-1501339819358-ee83cede5bb2?w=800&q=80'
+  },
+  { 
+    name: 'El Social', 
+    type: 'Bar Tradicional', 
+    desc: 'Una esquina mítica donde la tradición paisa se encuentra con la modernidad.',
+    img: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80'
+  },
+  { 
+    name: 'Oci.Mde', 
+    type: 'Gastronomía Autor', 
+    desc: 'Cocina lenta y sabores profundos en un ambiente industrial sofisticado.',
+    img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80'
+  }
+];
+
 export default function MedellinGuidePage() {
   const { lang = 'es' } = useOutletContext() || {};
 
   return (
-    <div className="p-6 md:p-14 animate-fade-in bg-paradise-950 pb-32">
+    <div className="p-6 md:p-14 animate-fade-in bg-paradise-950 pb-40">
       <div className="mb-20 max-w-4xl">
         <h1 className="heading-display text-5xl md:text-6xl text-paradise-50 mb-6 tracking-tight leading-none uppercase" style={{ fontFamily: "'Playfair Display', serif" }}>
           {lang === 'es' ? 'Guía de' : 'Guide to'}{' '}
@@ -70,7 +91,7 @@ export default function MedellinGuidePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14 mb-32">
         {PLACES.map((place, i) => (
           <div key={i} className="group relative rounded-[40px] overflow-hidden bg-paradise-900/10 border border-white/5 hover:border-orange-500/20 transition-all duration-1000">
             <div className="relative h-[550px] overflow-hidden">
@@ -102,6 +123,35 @@ export default function MedellinGuidePage() {
           </div>
         ))}
       </div>
+
+      {/* Hidden Gems Section */}
+      <section className="max-w-7xl mx-auto border-t border-white/5 pt-24">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <div>
+            <h2 className="text-3xl md:text-5xl font-black text-paradise-50 uppercase tracking-tighter mb-4">
+              Hidden Gems <span className="text-orange-500 font-serif italic lowercase font-light">en El Poblado</span>
+            </h2>
+            <p className="text-paradise-400 max-w-xl">Donde los locales realmente pasan el tiempo. Una selección curada de spots exclusivos.</p>
+          </div>
+          <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+            <MapPin size={18} className="text-orange-500" />
+            <span className="text-xs font-bold text-paradise-200 uppercase tracking-widest">Secret Spots 2024</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           {HIDDEN_GEMS.map((gem, i) => (
+             <div key={i} className="group glass-card rounded-[32px] p-6 hover:bg-orange-500/5 hover:border-orange-500/30 transition-all duration-500">
+                <div className="aspect-video rounded-2xl overflow-hidden mb-6 border border-white/5">
+                  <img src={gem.img} alt={gem.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+                <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-2">{gem.type}</h4>
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{gem.name}</h3>
+                <p className="text-paradise-400 text-sm leading-relaxed">{gem.desc}</p>
+             </div>
+           ))}
+        </div>
+      </section>
     </div>
   );
 }

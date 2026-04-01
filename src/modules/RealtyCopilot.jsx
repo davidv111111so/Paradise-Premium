@@ -35,9 +35,9 @@ export default function RealtyCopilot() {
     try {
       // Step 1: Use Gemini to extract search filters from natural language
       const model = getModel();
-      const extractionPrompt = `Eres un asistente inmobiliario. El usuario quiere buscar una propiedad. Extrae los filtros de búsqueda del siguiente texto y devuelve SOLO un JSON válido con estos campos posibles:
+      const extractionPrompt = `Eres un asistente inmobiliario experto en Medellín. El usuario quiere buscar una propiedad. Extrae los filtros de búsqueda del siguiente texto y devuelve SOLO un JSON válido con estos campos:
 {
-  "category": "apartment" | "house" | "finca" | "water_vehicle" | null,
+  "category": "apartment" | "finca" | "vehicle" | null,
   "max_price": number | null,
   "min_price": number | null,
   "neighborhood": string | null,
@@ -47,12 +47,19 @@ export default function RealtyCopilot() {
   "min_area": number | null
 }
 
+Reglas:
+- Si el usuario menciona botes, yates o navegación, usa "vehicle".
+- Si menciona fincas o casas de campo, usa "finca".
+- Si menciona apartamentos o lofts, usa "apartment".
+- Traduce barrios como "El Poblado", "Laureles", etc.
+
 Texto del usuario: "${query}"
 
-Responde SOLO con el JSON, sin markdown ni explicaciones.`;
+Responde SOLO con el JSON.`;
 
       const extractionResult = await model.generateContent(extractionPrompt);
-      let filtersText = extractionResult.response.text().trim();
+      const resultText = await extractionResult.response.text();
+      let filtersText = resultText.trim();
 
       // Clean potential markdown code fences
       filtersText = filtersText.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
@@ -60,14 +67,21 @@ Responde SOLO con el JSON, sin markdown ni explicaciones.`;
       let filters;
       try {
         filters = JSON.parse(filtersText);
-      } catch {
+      } catch (parseErr) {
+        console.error('Extraction parse error:', parseErr, 'Raw text:', filtersText);
+        // Fallback to empty filters if JSON is malformed
         filters = {};
       }
 
       // Step 2: Query Supabase with extracted filters
       let dbQuery = supabase.from('properties').select('*').eq('status', 'available');
 
-      if (filters.category) dbQuery = dbQuery.eq('category', filters.category);
+      // Category mapping (ensure it matches store.js)
+      if (filters.category) {
+        let cat = filters.category;
+        if (cat === 'water_vehicle' || cat === 'boat') cat = 'vehicle';
+        dbQuery = dbQuery.eq('category', cat);
+      }
       if (filters.max_price) dbQuery = dbQuery.lte('price', filters.max_price);
       if (filters.min_price) dbQuery = dbQuery.gte('price', filters.min_price);
       if (filters.neighborhood)

@@ -39,17 +39,12 @@ export default function DescriptionGenerator() {
 
     try {
       const model = getModel();
-      const audienceLabel = AUDIENCES.find(a => a.id === form.audience).label;
+      const audienceLabel = AUDIENCES.find(a => a.id === form.audience)?.label || 'Inversionistas';
 
-      const systemPrompt = `Eres un copywriter experto en bienes raíces de ultra-lujo. Tu tarea es escribir descripciones de propiedades que sean:
-- Persuasivas y evocadoras, orientadas específicamente a: ${audienceLabel}.
-- Optimizadas para SEO (incluye keywords naturales de bienes raíces).
-- En español colombiano fluido y sofisticado.
-- De 3-4 párrafos estructurados, con un tono aspiracional.
-- Usa emojis elegantes de forma minimalista.
-No inventes datos que no se proporcionan.`;
+      const fullPrompt = `Toma el rol de un copywriter experto en bienes raíces de ultra-lujo en Medellín. 
+Escribe una descripción persuasiva y evocadora para la siguiente propiedad, orientada específicamente a: ${audienceLabel}.
 
-      const userPrompt = `Genera una descripción inmobiliaria premium para esta propiedad:
+DETALLES DE LA PROPIEDAD:
 - Habitaciones: ${form.bedrooms || 'No especificado'}
 - Baños: ${form.bathrooms || 'No especificado'}
 - Área: ${form.area ? form.area + ' m²' : 'No especificado'}
@@ -57,13 +52,26 @@ No inventes datos que no se proporcionan.`;
 - Ciudad: ${form.city || 'No especificado'}
 - Amenidades: ${form.amenities.length ? form.amenities.join(', ') : 'No especificadas'}
 - Estilo: ${form.style === 'luxury' ? 'Elegancia Clásica' : form.style === 'modern' ? 'Minimalista Moderno' : 'Acogedor'}
-- Objetivo: Convencer a ${audienceLabel} de por qué esta es su mejor opción.`;
 
-      const result = await model.generateContent([systemPrompt, userPrompt]);
+REQUISITOS DEL OUTPUT:
+- 3 a 4 párrafos sofisticados.
+- Tono aspiracional y exclusivo.
+- Optimización SEO natural.
+- Español colombiano fluido.
+- Emojis mínimos y elegantes.
+- NO inventes datos técnicos adicionales.
+
+Genera el copy ahora:`;
+
+      const result = await model.generateContent(fullPrompt);
       const text = result.response.text();
+      
+      if (!text) throw new Error('La IA no devolvió contenido.');
+      
       setDescription(text);
     } catch (err) {
-      setError(err.message || 'Error al generar la descripción.');
+      console.error('AI Generation Error:', err);
+      setError('Error al generar la descripción. Intente nuevamente en unos segundos o verifique su conexión.');
     } finally {
       setLoading(false);
     }

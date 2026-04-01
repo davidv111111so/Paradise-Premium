@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil, Star } from 'lucide-react';
+import { Camera, Video, Plus, Trash2, Home, Building2, Ship, MapPin, DollarSign, Waves, ListChecks, Pencil, Star, ImagePlus, Zap } from 'lucide-react';
 import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { addProperty, getProperty, updateProperty, isAuthorized } from '../lib/store';
 import PartnerAuthModal from '../components/PartnerAuthModal';
+import StagingModal from '../components/StagingModal';
 
 export default function PublishPage() {
   const { lang, t } = useOutletContext();
@@ -29,6 +30,7 @@ export default function PublishPage() {
 
   const [otherAmenity, setOtherAmenity] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isStagingModalOpen, setIsStagingModalOpen] = useState(false);
 
   // Load property if editing
   useEffect(() => {
@@ -263,9 +265,19 @@ export default function PublishPage() {
           </section>
 
           <section className="glass-card p-8 rounded-3xl border-emerald-500/20">
-            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <Camera size={16} /> 2. {lang === 'es' ? 'Galería de Imágenes' : 'Image Gallery'}
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                <Camera size={16} /> 2. {lang === 'es' ? 'Galería de Imágenes' : 'Image Gallery'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsStagingModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-accent-500/10 border border-accent-500/20 rounded-xl text-[10px] font-black text-accent-400 hover:bg-accent-500/20 transition-all uppercase tracking-widest shadow-lg shadow-accent-500/5 hover:scale-105 active:scale-95"
+              >
+                <Zap size={14} className="fill-accent-400" />
+                {lang === 'es' ? 'Herramienta Staging' : 'Staging Tool'}
+              </button>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
               {images.map((img, index) => (
                 <div key={index} className="relative aspect-square rounded-2xl overflow-hidden group border border-paradise-800 transition-all hover:border-emerald-500/50">
@@ -430,6 +442,11 @@ export default function PublishPage() {
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
         onConfirm={onConfirmAuth}
+        lang={lang}
+      />
+      <StagingModal 
+        isOpen={isStagingModalOpen}
+        onClose={() => setIsStagingModalOpen(false)}
         lang={lang}
       />
     </div>
