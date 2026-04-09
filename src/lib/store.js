@@ -128,22 +128,46 @@ function syncWithLocal(fullData) {
 export const getProperties = async () => {
   initStore();
   
-  try {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (!error && data) {
-      syncWithLocal(data);
-      return data;
+  // 1) Serve local storage instantly for fast UX (optimistic UI)
+  const localData = localStorage.getItem('paradise_properties_v4');
+  const cachedProperties = localData ? JSON.parse(localData) : [];
+  
+  // 2) Trigger cloud sync in background only if necessary (TTL: 5 minutes) to avoid JSON parse freezes
+  const CACHE_TTL = 5 * 60 * 1000; 
+  const lastSync = parseInt(localStorage.getItem('paradise_last_sync') || '0', 10);
+  const now = Date.now();
+
+  const shouldSync = (now - lastSync > CACHE_TTL) || cachedProperties.length === 0;
+
+  if (shouldSync) {
+    try {
+      supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then(({data, error}) => {
+          if (!error && data && data.length > 0) {
+            syncWithLocal(data);
+            localStorage.setItem('paradise_last_sync', Date.now().toString());
+            // Optional: we emit an event or rely on next nav to see updates
+          }
+        });
+    } catch (e) {
+      console.error('Background fetch error:', e);
     }
-  } catch (e) {
-    console.error('Supabase fetch error:', e);
   }
 
-  const localData = localStorage.getItem('paradise_properties_v4');
-  return localData ? JSON.parse(localData) : [];
+  // Fallback if cache is completely empty and we need data NOW
+  if (cachedProperties.length === 0) {
+     const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+     if (!error && data) {
+       syncWithLocal(data);
+       localStorage.setItem('paradise_last_sync', Date.now().toString());
+       return data;
+     }
+  }
+
+  return cachedProperties;
 };
 
 export const getProperty = async (id) => {
@@ -283,10 +307,12 @@ export const updateProperty = async (id, updates) => {
   const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
   const idx = all.findIndex(p => String(p.id) === String(id));
   
-  if (idx === -1) throw new Error('Propiedad no encontrada localmente.');
+  if (idx === -1) {
+    console.warn('Property not found locally to update, attempting cloud update independently');
+  }
 
   // Build merged object correctly
-  const finalUpdate = { ...all[idx], ...updates, updated_at: new Date().toISOString() };
+  const finalUpdate = idx !== -1 ? { ...all[idx], ...updates, updated_at: new Date().toISOString() } : { ...updates, id, updated_at: new Date().toISOString() };
   
   const isMockId = String(id).length < 5;
 
@@ -312,7 +338,11 @@ export const updateProperty = async (id, updates) => {
   }
 
   // Update local
-  all[idx] = finalUpdate;
+  if (idx !== -1) {
+    all[idx] = finalUpdate;
+  } else {
+    all.push(finalUpdate);
+  }
   syncWithLocal(all);
   return all;
 };

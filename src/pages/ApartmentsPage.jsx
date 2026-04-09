@@ -67,7 +67,7 @@ export default function ApartmentsPage() {
           </h1>
         </div>
         <p className="text-paradise-400">
-          Residencias de lujo seleccionadas para los más exigentes
+          Residencias amobladas seleccionadas para nuestros clientes
         </p>
       </div>
 

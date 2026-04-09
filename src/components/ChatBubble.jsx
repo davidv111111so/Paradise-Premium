@@ -1,9 +1,12 @@
 // --------------------------------------------------------
-// ChatBubble — message bubble for the Realty Copilot
+// ChatBubble — message bubble for the Paradise Copilot
 // --------------------------------------------------------
 import { Bot, User } from 'lucide-react';
 
-export default function ChatBubble({ message, isAI = false }) {
+export default function ChatBubble({ message }) {
+  const isAI = message?.role === 'ai';
+  const content = message?.content || (typeof message === 'string' ? message : '');
+
   return (
     <div className={`flex gap-3 animate-fade-in ${isAI ? '' : 'flex-row-reverse'}`}>
       {/* Avatar */}
@@ -19,13 +22,13 @@ export default function ChatBubble({ message, isAI = false }) {
 
       {/* Bubble */}
       <div
-        className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+        className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
           isAI
             ? 'bg-paradise-700/60 text-paradise-100 rounded-tl-sm'
             : 'bg-accent-500/15 text-paradise-100 rounded-tr-sm border border-accent-500/10'
         }`}
       >
-        {typeof message === 'object' ? message.content : message}
+        {content}
       </div>
     </div>
   );
