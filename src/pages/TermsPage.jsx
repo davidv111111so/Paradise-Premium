@@ -22,75 +22,114 @@ export default function TermsPage() {
       </div>
 
       <div className="max-w-4xl space-y-12">
-        {/* Reservation Policy */}
+        {/* 1. Responsabilidad y Reservas */}
         <section className="glass-card p-10 rounded-[40px] border-orange-500/10">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
               <Calendar className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              1. {lang === 'es' ? 'Contratación y Reservas' : 'Booking & Reservations'}
+              1. {lang === 'es' ? 'Huésped Responsable y Reservas' : 'Responsible Guest & Bookings'}
             </h2>
           </div>
           <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
             <p>
               {lang === 'es' 
-                ? 'Las reservas solo se consideran confirmadas una vez que el pago correspondiente haya sido verificado por nuestro equipo administrativo.' 
-                : 'Bookings are only considered confirmed once the corresponding payment has been verified by our administrative team.'}
+                ? 'Se define como Huésped Responsable a la persona que realiza la reserva. Esta persona actúa en representación de todos los ocupantes y es el único responsable legal por la integridad del inmueble y el cumplimiento de estas políticas.' 
+                : 'The Responsible Guest is defined as the person who makes the booking. This person acts on behalf of all occupants and is solely responsible for property integrity and policy compliance.'}
             </p>
             <p>
               {lang === 'es' 
-                ? 'El cliente reconoce que todas las fotos y descripciones de las propiedades son una representación fiel pero pueden estar sujetas a cambios menores en el amoblado.' 
-                : 'The client acknowledges that all property photos and descriptions are a faithful representation but may be subject to minor changes in furnishing.'}
+                ? 'Las reservas se confirman tras la verificación del pago. La capacidad máxima de cada propiedad debe respetarse estrictamente; el ingreso de personas adicionales no registradas incurrirá en cargos extra.' 
+                : 'Bookings are confirmed upon payment verification. Maximum property capacity must be strictly respected; unregistered additional guests will incur extra charges.'}
+            </p>
+            <p className="p-6 bg-orange-500/5 rounded-2xl border border-orange-500/20 text-orange-400/80 italic text-sm">
+              {lang === 'es' 
+                ? 'Protección al Menor: En cumplimiento de la Ley 1336 de 2009, rechazamos y denunciaremos cualquier indicio de explotación sexual comercial de niños, niñas y adolescentes.' 
+                : 'Child Protection: In compliance with Law 1336 of 2009, we reject and will report any indication of commercial sexual exploitation of children and adolescents.'}
             </p>
           </div>
         </section>
 
-        {/* Cancellation Policy */}
-        <section className="glass-card p-10 rounded-[40px] border-orange-500/10">
+        {/* 2. Cancelaciones Escalonadas */}
+        <section className="glass-card p-10 rounded-[40px] border-orange-500/10 border-l-orange-500/40">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
               <AlertTriangle className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              2. {lang === 'es' ? 'Cancelaciones y Reembolsos' : 'Cancellations & Refunds'}
+              2. {lang === 'es' ? 'Política de Cancelación' : 'Cancellation Policy'}
             </h2>
           </div>
-          <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
-            <p>
-              {lang === 'es' 
-                ? 'Nuestra política de cancelación varía según la propiedad y la temporada. Consulte los detalles específicos de su reserva antes de confirmar el pago.' 
-                : 'Our cancellation policy varies by property and season. Please check the specific details of your booking before confirming payment.'}
-            </p>
-            <p>
-              {lang === 'es' 
-                ? 'Paradise Premium Rentals no se hace responsable de cancelaciones por fuerza mayor, desastres naturales o eventos fuera de nuestro control.' 
-                : 'Paradise Premium Rentals is not responsible for cancellations due to force majeure, natural disasters, or events beyond our control.'}
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="p-4 bg-white/5 rounded-xl">
+              <p className="font-bold text-orange-400 mb-1">{lang === 'es' ? '+30 Días' : '30+ Days'}</p>
+              <p className="text-paradise-400">{lang === 'es' ? 'Reembolso del 80% o crédito del 100%.' : '80% refund or 100% credit.'}</p>
+            </div>
+            <div className="p-4 bg-white/5 rounded-xl">
+              <p className="font-bold text-orange-400 mb-1">{lang === 'es' ? '15-29 Días' : '15-29 Days'}</p>
+              <p className="text-paradise-400">{lang === 'es' ? 'Reembolso del 50% del valor total.' : '50% refund of total value.'}</p>
+            </div>
+            <div className="p-4 bg-white/5 rounded-xl opacity-60">
+              <p className="font-bold text-orange-400 mb-1">{lang === 'es' ? '< 15 Días' : '< 15 Days'}</p>
+              <p className="text-paradise-400">{lang === 'es' ? 'No reembolsable.' : 'Non-refundable.'}</p>
+            </div>
+            <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
+              <p className="font-bold text-white mb-1">{lang === 'es' ? 'Fuerza Mayor' : 'Force Majeure'}</p>
+              <p className="text-paradise-300">{lang === 'es' ? 'Garantizamos reubicación o 100% de devolución.' : 'We guarantee relocation or 100% refund.'}</p>
+            </div>
           </div>
         </section>
 
-        {/* Responsibilities */}
+        {/* 3. Convivencia y Silencio */}
         <section className="glass-card p-10 rounded-[40px] border-orange-500/10">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
               <Handshake className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              3. {lang === 'es' ? 'Responsabilidades del Huesped' : 'Guest Responsibilities'}
+              3. {lang === 'es' ? 'Protocolo de Convivencia' : 'Coexistence Protocol'}
             </h2>
           </div>
           <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
+            <div className="flex gap-4 p-4 bg-red-500/5 rounded-2xl border border-red-500/10 text-red-400/80">
+              <Info size={20} className="shrink-0" />
+              <p className="text-sm italic">
+                {lang === 'es' 
+                  ? 'Horas de Silencio: 10:00 PM - 8:00 AM. Se prohíbe el uso de bafles profesionales o sonido de alta potencia.' 
+                  : 'Quiet Hours: 10:00 PM - 8:00 AM. Use of professional speakers or high-power sound systems is prohibited.'}
+              </p>
+            </div>
             <p>
               {lang === 'es' 
-                ? 'El huésped es responsable de mantener la propiedad en buen estado y seguir las reglas específicas de convivencia del edificio o la zona rural.' 
-                : 'The guest is responsible for maintaining the property in good condition and following the specific coexistence rules of the building or rural area.'}
+                ? 'El ruido excesivo que trascienda los límites de la propiedad podrá dar lugar a multas administrativas o incluso la terminación inmediata del contrato sin reembolso.' 
+                : 'Excessive noise beyond property limits may result in administrative fines or even immediate contract termination without refund.'}
             </p>
-            <p className="p-6 bg-red-500/5 rounded-2xl border border-red-500/20 text-red-400/80 italic text-sm">
+          </div>
+        </section>
+
+        {/* 4. Depósito y Daños */}
+        <section className="glass-card p-10 rounded-[40px] border-orange-500/10">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+              <ShieldCheck className="text-orange-400" size={24} />
+            </div>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
+              4. {lang === 'es' ? 'Depósito y Transparencia' : 'Deposit & Transparency'}
+            </h2>
+          </div>
+          <div className="space-y-4 text-paradise-300 text-sm">
+            <p>
               {lang === 'es' 
-                ? 'Queda estrictamente prohibido el uso de las propiedades para actividades ilegales o que perturben la tranquilidad de la comunidad circundante.' 
-                : 'Use of the properties for illegal activities or activities that disturb the peace of the surrounding community is strictly prohibited.'}
+                ? 'Para garantizar una experiencia justa, aplicamos un Menú de Transparencia para daños comunes:' 
+                : 'To ensure a fair experience, we apply a Transparency Menu for common damages:'}
             </p>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 list-disc pl-5 opacity-80">
+              <li>{lang === 'es' ? 'Llaves/Controles: $150k COP' : 'Keys/Refmotes: $150k COP'}</li>
+              <li>{lang === 'es' ? 'Manchas en lencería: $80k COP' : 'Linen stains: $80k COP'}</li>
+              <li>{lang === 'es' ? 'Cristalería: $25k COP' : 'Glassware: $25k COP'}</li>
+              <li>{lang === 'es' ? 'Retraso en salida: $100k/hr' : 'Late check-out: $100k/hr'}</li>
+            </ul>
           </div>
         </section>
       </div>

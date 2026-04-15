@@ -29,19 +29,19 @@ export default function PrivacyPage() {
               <Eye className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              1. {lang === 'es' ? 'Información que Recolectamos' : 'Information We Collect'}
+              1. {lang === 'es' ? 'Recolección de Información' : 'Information Collection'}
             </h2>
           </div>
           <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
             <p>
               {lang === 'es' 
-                ? 'Recolectamos información personal como su nombre, correo electrónico, número de teléfono e información de pago cuando realiza una reserva o se pone en contacto con nosotros.' 
-                : 'We collect personal information such as your name, email, phone number, and payment information when you make a booking or contact us.'}
+                ? 'Recolectamos datos personales como nombre, identificación (cédula/pasaporte), correo electrónico y teléfono. Esta información es obligatoria para la contratación de la Tarjeta de Asistencia Médica (Seguro de Turismo) y su registro ante las autoridades colombianas.' 
+                : 'We collect personal data such as name, identification (ID/Passport), email, and phone. This information is mandatory for contracting the Medical Assistance Card (Tourism Insurance) and your registry before Colombian authorities.'}
             </p>
             <p>
               {lang === 'es' 
-                ? 'También recolectamos datos técnicos como su dirección IP y el comportamiento de navegación en nuestro sitio web para mejorar su experiencia mediante el uso de cookies.' 
-                : 'We also collect technical data such as your IP address and browsing behavior on our website to enhance your experience through cookies.'}
+                ? 'También recolectamos datos técnicos de navegación para optimizar su experiencia premium en nuestra plataforma.' 
+                : 'We also collect technical browsing data to optimize your premium experience on our platform.'}
             </p>
           </div>
         </section>
@@ -53,19 +53,19 @@ export default function PrivacyPage() {
               <ShieldCheck className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              2. {lang === 'es' ? 'Uso de la Información' : 'Use of Information'}
+              2. {lang === 'es' ? 'Tratamiento y Finalidad' : 'Data Processing'}
             </h2>
           </div>
           <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
             <p>
               {lang === 'es' 
-                ? 'Su información se utiliza exclusivamente para procesar transacciones, gestionar reservas, responder a sus requerimientos y enviarle comunicaciones promocionales si usted lo autoriza.' 
-                : 'Your information is used exclusively to process transactions, manage bookings, respond to your inquiries, and send promotional communications if authorized by you.'}
+                ? 'Sus datos se utilizan para: 1. Gestionar su reserva, 2. Cumplir con la obligación legal del Registro Nacional de Turismo, 3. Gestionar seguros de viaje y 4. Enviarle comunicaciones exclusivas de Paradise Premium.' 
+                : 'Your data is used to: 1. Manage your booking, 2. Comply with the legal obligation of the National Tourism Registry, 3. Manage travel insurance, and 4. Send you exclusive Paradise Premium communications.'}
             </p>
-            <p>
+            <p className="p-6 bg-orange-500/5 rounded-2xl border border-orange-500/20 text-orange-400/80 italic text-sm">
               {lang === 'es' 
-                ? 'Bajo ninguna circunstancia vendemos o compartimos su información personal con terceros sin su consentimiento explícito, salvo por requerimientos legales.' 
-                : 'Under no circumstances do we sell or share your personal information with third parties without your explicit consent, except for legal requirements.'}
+                ? 'Bajo ninguna circunstancia vendemos su información. Sus datos son tratados bajo estrictos protocolos de seguridad criptográfica.' 
+                : 'Under no circumstances do we sell your information. Your data is treated under strict cryptographic security protocols.'}
             </p>
           </div>
         </section>
@@ -77,19 +77,19 @@ export default function PrivacyPage() {
               <Lock className="text-orange-400" size={24} />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-              3. {lang === 'es' ? 'Ley de Habeas Data (Ley 1581 de 2012)' : 'Data Protection Law'}
+              3. {lang === 'es' ? 'Ley de Habeas Data (Ley 1581)' : 'Habeas Data (Law 1581)'}
             </h2>
           </div>
           <div className="space-y-6 text-paradise-300 leading-relaxed font-light">
             <p>
               {lang === 'es' 
-                ? 'En cumplimiento de la legislación colombiana, los titulares de los datos tienen derecho a conocer, actualizar y rectificar su información personal en cualquier momento.' 
-                : 'In compliance with Colombian legislation, data owners have the right to know, update, and rectify their personal information at any time.'}
+                ? 'Como titular de los datos, usted tiene derecho a conocer, actualizar, rectificar y suprimir su información de nuestras bases de datos en cualquier momento.' 
+                : 'As a data owner, you have the right to know, update, rectify, and delete your information from our databases at any time.'}
             </p>
             <p>
               {lang === 'es' 
-                ? 'Para cualquier solicitud relacionada con sus datos, puede escribirnos a info@paradiserentas.com o contactar a nuestro equipo de soporte.' 
-                : 'For any request related to your data, you can write to us at info@paradiserentas.com or contact our support team.'}
+                ? 'Para ejercer sus derechos, puede contactar a nuestro Oficial de Privacidad en info@paradiserentas.com.' 
+                : 'To exercise your rights, you can contact our Privacy Officer at info@paradiserentas.com.'}
             </p>
           </div>
         </section>

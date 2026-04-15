@@ -16,6 +16,7 @@ import PublishPage from './pages/PublishPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import GuestSignPage from './pages/GuestSignPage';
 
 export default function App() {
   // Removed old Tawk.to widget to favor modern AICopilot
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="property/:id" element={<PropertyDetailPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
+          <Route path="sign/:id" element={<GuestSignPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

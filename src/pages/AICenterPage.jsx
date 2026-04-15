@@ -9,13 +9,16 @@ import {
   Sparkles,
   Lock,
   Layers,
-  BarChart3
+  BarChart3,
+  ShieldCheck,
+  Scale
 } from 'lucide-react';
 import VirtualStaging from '../modules/VirtualStaging';
 import DescriptionGenerator from '../modules/DescriptionGenerator';
 import ValuationAI from '../modules/ValuationAI';
 import FinancialCalculator from '../modules/FinancialCalculator';
 import InventoryManager from '../modules/InventoryManager';
+import LegalManager from '../modules/LegalManager';
 import { supabase } from '../lib/supabase';
 import { isAuthorized } from '../lib/store';
 import PartnerAuthModal from '../components/PartnerAuthModal';
@@ -42,6 +45,7 @@ export default function AICenterPage() {
   const TABS = [
     { id: 'staging', label: 'Staging Virtual', icon: ImagePlus, component: VirtualStaging, adminOnly: false },
     { id: 'description', label: 'Generador IA', icon: FileText, component: DescriptionGenerator, adminOnly: true },
+    { id: 'legal', label: 'Documentos Legales', icon: Scale, component: LegalManager, adminOnly: true },
     { id: 'valuation', label: 'Tasación Renta', icon: TrendingUp, component: ValuationAI, adminOnly: false },
     { id: 'calculator', label: 'Calculadora Pro', icon: BarChart3, component: FinancialCalculator, adminOnly: false },
     { id: 'manager', label: 'Gestión Inventario', icon: Layers, component: InventoryManager, adminOnly: true },
