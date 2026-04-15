@@ -449,9 +449,15 @@ export default function LegalManager() {
           </button>
           <button 
             onClick={handlePrint}
+            className="flex items-center justify-center gap-2 py-4 bg-[#1A4D2E] text-white border border-[#1A4D2E] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-[#1A4D2E]/20"
+          >
+            <Download size={14} /> Descargar para Impresión
+          </button>
+          <button 
+            onClick={handlePrint}
             className="flex items-center justify-center gap-2 py-4 bg-white/5 text-white border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
           >
-            <Printer size={14} /> Imprimir
+            <Printer size={14} /> Vista Previa
           </button>
         </div>
 
@@ -506,11 +512,31 @@ export default function LegalManager() {
                 background-color: #fff176;
               }
               @media print {
-                body * { visibility: hidden; }
-                .print-content, .print-content * { visibility: visible; }
-                .print-content { position: absolute; left: 0; top: 0; width: 100%; }
-                .editable-field { background-color: transparent !important; border: none !important; }
-                .no-print { display: none !important; }
+                @page {
+                  size: A4;
+                  margin: 20mm;
+                }
+                body * { visibility: hidden !important; }
+                .legal-visor, .legal-visor * { visibility: visible !important; }
+                .legal-visor { 
+                  position: absolute; 
+                  left: 0; 
+                  top: 0; 
+                  width: 100% !important; 
+                  padding: 0 !important;
+                  margin: 0 !important;
+                  background: white !important;
+                  color: black !important;
+                }
+                .editable-field { 
+                  background-color: transparent !important; 
+                  border: none !important; 
+                  padding: 0 !important;
+                  text-decoration: underline;
+                }
+                .no-print, button, .glass-card:not(.legal-visor) { display: none !important; }
+                header, footer, .sidebar-controls { display: none !important; }
+                .legal-doc-header img { filter: grayscale(1) !important; max-height: 80px !important; }
               }
             `}</style>
 
