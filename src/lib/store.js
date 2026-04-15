@@ -1,8 +1,6 @@
-import { Building2, Home, Ship } from 'lucide-react';
 import { supabase, authorizeSupabase } from './supabase';
 
 const INITIAL_PROPERTIES = [
-  // ... (keeping current initial properties)
   {
     id: '1',
     title: 'Penthouse Provenza Luxury',
@@ -94,107 +92,68 @@ const INITIAL_PROPERTIES = [
   }
 ];
 
-// Helper to initialize LocalStorage if empty
-function initStore() {
-  const existing = localStorage.getItem('paradise_properties_v4');
-  const wasInitialized = localStorage.getItem('paradise_initialized_v4');
-  
-  if (!existing && !wasInitialized) {
-    localStorage.setItem('paradise_properties_v4', JSON.stringify(INITIAL_PROPERTIES));
-    localStorage.setItem('paradise_initialized_v4', 'true');
-  }
-}
+const STORAGE_KEY = 'paradise_properties_v5';
+const INIT_KEY = 'paradise_initialized_v5';
+const SYNC_KEY = 'paradise_last_sync_v5';
 
-/**
- * Ensures we don't hit the 5MB LocalStorage quota.
- * Strips large image arrays, keeping only the first image for thumbnails.
- */
-function syncWithLocal(fullData) {
-  try {
-    const lightData = fullData.map(p => ({
-      ...p,
-      images: (p.images && p.images.length > 0) ? [p.images[0]] : []
-    }));
-    localStorage.setItem('paradise_properties_v4', JSON.stringify(lightData));
-  } catch (e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22) {
-      console.warn('LocalStorage quota exceeded. Clearing and retrying with minimal data...');
-      localStorage.clear(); // Extreme but ensures we can keep working
-    }
-    console.error('Local sync failed:', e);
-  }
-}
+// Asynchronous LocalStorage Helpers
+const storage = {
+  get: () => new Promise(res => {
+    setTimeout(() => {
+      const data = localStorage.getItem(STORAGE_KEY);
+      res(data ? JSON.parse(data) : []);
+    }, 0);
+  }),
+  set: (data) => new Promise(res => {
+    setTimeout(() => {
+      // Lightening images to prevent QuotaExceededError
+      const lightData = data.map(p => ({
+        ...p,
+        images: (p.images && p.images.length > 0) ? [p.images[0]] : []
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lightData));
+      res();
+    }, 0);
+  })
+};
 
 export const getProperties = async () => {
-  initStore();
-  
-  // 1) Serve local storage instantly for fast UX (optimistic UI)
-  const localData = localStorage.getItem('paradise_properties_v4');
-  const cachedProperties = localData ? JSON.parse(localData) : [];
-  
-  // 2) Trigger cloud sync in background only if necessary (TTL: 5 minutes) to avoid JSON parse freezes
-  const CACHE_TTL = 5 * 60 * 1000; 
-  const lastSync = parseInt(localStorage.getItem('paradise_last_sync') || '0', 10);
-  const now = Date.now();
-
-  const shouldSync = (now - lastSync > CACHE_TTL) || cachedProperties.length === 0;
-
-  if (shouldSync) {
-    try {
-      supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .then(({data, error}) => {
-          if (!error && data && data.length > 0) {
-            syncWithLocal(data);
-            localStorage.setItem('paradise_last_sync', Date.now().toString());
-            // Optional: we emit an event or rely on next nav to see updates
-          }
-        });
-    } catch (e) {
-      console.error('Background fetch error:', e);
-    }
+  const wasInitialized = localStorage.getItem(INIT_KEY);
+  if (!wasInitialized) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROPERTIES));
+    localStorage.setItem(INIT_KEY, 'true');
+    return INITIAL_PROPERTIES;
   }
 
-  // Fallback if cache is completely empty and we need data NOW
-  if (cachedProperties.length === 0) {
-     const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
-     if (!error && data) {
-       syncWithLocal(data);
-       localStorage.setItem('paradise_last_sync', Date.now().toString());
-       return data;
-     }
+  const cached = await storage.get();
+  const lastSync = parseInt(localStorage.getItem(SYNC_KEY) || '0', 10);
+  const CACHE_TTL = 5 * 60 * 1000;
+
+  if (Date.now() - lastSync > CACHE_TTL || cached.length === 0) {
+    supabase.from('properties')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({data, error}) => {
+        if (!error && data) {
+          storage.set(data);
+          localStorage.setItem(SYNC_KEY, Date.now().toString());
+        }
+      });
   }
 
-  return cachedProperties;
+  return cached;
 };
 
 export const getProperty = async (id) => {
-  try {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('id', id)
-      .single();
-      
-    if (!error && data) {
-      // Update local storage with full data if we got it from cloud
-      const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-      const idx = all.findIndex(p => String(p.id) === String(id));
-      if (idx !== -1) {
-        all[idx] = data;
-      } else {
-        all.push(data);
-      }
-      localStorage.setItem('paradise_properties_v4', JSON.stringify(all));
-      return data;
-    }
-  } catch (e) {
-    console.error('getProperty cloud error:', e);
+  const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
+  if (!error && data) {
+    const all = await storage.get();
+    const idx = all.findIndex(p => String(p.id) === String(id));
+    if (idx !== -1) all[idx] = data; else all.push(data);
+    await storage.set(all);
+    return data;
   }
-
-  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+  const all = await storage.get();
   return all.find(p => String(p.id) === String(id));
 };
 
@@ -202,159 +161,43 @@ export const isAuthorized = (rawEmail) => {
   const partnerEmail = (rawEmail || '').trim().toLowerCase();
   const AUTHORIZED_NAMES = ['marlon', 'andrea', 'gustavo'];
   const isAuth = AUTHORIZED_NAMES.some(name => partnerEmail.includes(name)) || 
-                 partnerEmail.endsWith('@paradiserentas.com') ||
-                 partnerEmail === 'andrea';
+                 partnerEmail.endsWith('@paradiserentas.com');
   
-  if (isAuth) {
-    // Inject secret for RLS bypass (Migration 003)
-    authorizeSupabase('paradise-premium-secret-2024');
-  }
-  
+  if (isAuth) authorizeSupabase('paradise-premium-secret-2024');
   return isAuth;
 };
 
-export const addProperty = async (prop, authorEmail) => {
-  const localId = Date.now().toString();
-  const now = new Date().toISOString();
-
-  // Build the object for Supabase (snake_case, no manual id — UUID is auto-generated)
-  const cloudProp = {
-    title: prop.title,
-    price: prop.price,
-    location: prop.location,
-    neighborhood: prop.neighborhood || prop.location,
-    description: prop.description,
-    category: prop.category,
-    videoUrl: prop.videoUrl || '', // Verified as videoUrl in DB
-    bedrooms: prop.bedrooms || 0,
-    bathrooms: prop.bathrooms || 0,
-    area_m2: prop.area_m2 || 0,
-    capacity: prop.capacity || 0,
-    amenities: prop.amenities || [],
-    images: prop.images || [],
-    status: prop.status || 'available',
-    isMock: false
-  };
-
-  const localProp = { ...cloudProp, id: localId, created_at: now };
+export const addProperty = async (prop) => {
+  const { data, error } = await supabase.from('properties').insert([prop]).select();
+  if (error) throw new Error(error.message);
   
-  // 1. Local Save (Immediate UX)
-  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-  syncWithLocal([localProp, ...all]);
-  
-  // 2. Cloud Save (Persistence)
-  try {
-    const { data, error } = await supabase.from('properties').insert([cloudProp]).select();
-    
-    if (error) {
-      // Remove from local if it failed cloud and we want to be strict? 
-      // User says "arregla que funcione bien", so let's be strict.
-      const rollback = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-      localStorage.setItem('paradise_properties_v4', JSON.stringify(rollback.filter(p => p.id !== localId)));
-      throw new Error(`Cloud sync failed: ${error.message}`);
-    } 
-    
-    if (data && data[0]) {
-      // Update localProp with the real UUID from Supabase
-      localProp.id = data[0].id;
-      localProp.created_at = data[0].created_at;
-      // Re-save to localStorage with the real UUID
-      const updated = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-      const idx = updated.findIndex(p => p.id === localId);
-      if (idx !== -1) updated[idx] = { ...localProp };
-      syncWithLocal(updated);
-      console.log('✅ Property synced to cloud:', data[0].id);
-      return localProp;
-    }
-  } catch (e) {
-    console.error('Persistence failed:', e.message);
-    throw e; // Rethrow to let PublishPage know it failed
+  if (data && data[0]) {
+    const all = await storage.get();
+    await storage.set([data[0], ...all]);
+    return data[0];
   }
-
-  return localProp;
 };
 
-export const removeProperty = async (id, rawEmail) => {
-  if (!isAuthorized(rawEmail)) {
-    throw new Error('No autorizado para eliminar propiedades.');
-  }
-
-  const isMockId = String(id).length < 5; 
+export const removeProperty = async (id, email) => {
+  if (!isAuthorized(email)) throw new Error('No autorizado');
+  const { error } = await supabase.from('properties').delete().eq('id', id);
+  if (error) throw error;
   
-  if (!isMockId) {
-    try {
-      // Return and throw error if not deleted correctly (e.g. RLS fail)
-      const { data, error } = await supabase.from('properties').delete().eq('id', id).select();
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        console.warn('RLS block: delete returned 0 rows affected.');
-        throw new Error('Error: La base de datos denegó la eliminación (Permisos RLS).');
-      }
-      console.log('✅ Property removed from cloud:', id);
-    } catch (e) {
-      console.error('Cloud delete failed:', e.message);
-      throw e;
-    }
-  }
-
-  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+  const all = await storage.get();
   const updated = all.filter(p => String(p.id) !== String(id));
-  syncWithLocal(updated);
+  await storage.set(updated);
   return updated;
 };
 
 export const updateProperty = async (id, updates) => {
-  const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
-  const idx = all.findIndex(p => String(p.id) === String(id));
-  
-  if (idx === -1) {
-    console.warn('Property not found locally to update, attempting cloud update independently');
+  const { data, error } = await supabase.from('properties').update(updates).eq('id', id).select();
+  if (error) throw error;
+
+  if (data && data[0]) {
+    const all = await storage.get();
+    const idx = all.findIndex(p => String(p.id) === String(id));
+    if (idx !== -1) all[idx] = data[0]; else all.push(data[0]);
+    await storage.set(all);
+    return all;
   }
-
-  // Build merged object correctly
-  const finalUpdate = idx !== -1 ? { ...all[idx], ...updates, updated_at: new Date().toISOString() } : { ...updates, id, updated_at: new Date().toISOString() };
-  
-  const isMockId = String(id).length < 5;
-
-  if (!isMockId) {
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .update(updates) // Send only the changed fields to Supabase
-        .eq('id', id)
-        .select();
-
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        console.warn('RLS block: update returned 0 rows affected.');
-        throw new Error('La base de datos denegó la actualización. Verifique permisos RLS.');
-      }
-      
-      console.log('✅ Property updated in cloud:', id);
-    } catch (e) {
-      console.error('Cloud update failed:', e.message);
-      throw e;
-    }
-  }
-
-  // Update local
-  if (idx !== -1) {
-    all[idx] = finalUpdate;
-  } else {
-    all.push(finalUpdate);
-  }
-  syncWithLocal(all);
-  return all;
 };
-
-/**
- * --- SOLUCIÓN PARA PROBLEMAS DE ACTUALIZACIÓN (RLS) ---
- * Si las propiedades no se borran o no se editan, ejecuta este SQL en tu Dashboard de Supabase (SQL Editor):
- * 
- * -- 1. Deshabilitar RLS temporalmente para pruebas (Opcional pero recomendado para arreglarlo rápido)
- * ALTER TABLE properties DISABLE ROW LEVEL SECURITY;
- * 
- * -- 2. O crear políticas que permitan a cualquier usuario (Anon) editar/borrar:
- * CREATE POLICY "Permitir todo a Anon" ON public.properties 
- * FOR ALL TO anon USING (true) WITH CHECK (true);
- */

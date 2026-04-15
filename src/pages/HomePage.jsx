@@ -1,6 +1,7 @@
 // --------------------------------------------------------
 // HomePage — Paradise Premium Rentals — Hero Image & Orange Headers
 // --------------------------------------------------------
+import { useToast } from '../components/ToastProvider';
 import { Search, Building2, Trees, Ship, Star, Award, MapPin, ChevronRight, Zap } from 'lucide-react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import PartnerAuthModal from '../components/PartnerAuthModal';
 
 export default function HomePage() {
   const { lang, t } = useOutletContext();
+  const { addToast } = useToast();
   const [recentProperties, setRecentProperties] = useState([]);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function HomePage() {
     setIsAuthModalOpen(false);
      
     if (!isAuthorized(rawEmail)) {
-      alert(t.partner_unauthorized);
+      addToast(t.partner_unauthorized, 'error');
       return;
     }
  
@@ -44,9 +46,9 @@ export default function HomePage() {
         await removeProperty(pendingDeleteId, rawEmail);
         const props = await getProperties();
         setRecentProperties(props.slice(0, 4));
-        alert(lang === 'es' ? 'Propiedad eliminada.' : 'Property deleted.');
+        addToast(lang === 'es' ? 'Propiedad eliminada.' : 'Property deleted.');
       } catch (err) {
-        alert(err.message);
+        addToast(err.message, 'error');
       } finally {
         setPendingDeleteId(null);
       }

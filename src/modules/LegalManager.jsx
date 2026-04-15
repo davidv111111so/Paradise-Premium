@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useToast } from '../components/ToastProvider';
 import { 
   FileText, 
   PenTool, 
@@ -220,11 +221,12 @@ const SignatureCanvas = ({ onSave, label }) => {
   );
 };
 
-export default function LegalManager() {
+export default function LegalManager({ selectedRes = null }) {
+  const { addToast } = useToast();
   const [selectedDoc, setSelectedDoc] = useState('admin');
   const [content, setContent] = useState(DOCUMENT_TEMPLATES.admin.content);
   const [signatures, setSignatures] = useState({ first: null, second: null });
-  const [activeBooking, setActiveBooking] = useState(null);
+  const [activeBooking, setActiveBooking] = useState(selectedRes || null);
   const [isAILoading, setIsAILoading] = useState(false);
   const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
   const [contractStatus, setContractStatus] = useState('NOT_SET'); // NOT_SET, PENDING, SIGNED, EXPIRED
@@ -243,20 +245,14 @@ export default function LegalManager() {
     setSignatures(prev => ({ ...prev, [idx === 0 ? 'first' : 'second']: dataUrl }));
   };
 
-  const handleDownloadPDF = () => {
-    // Note: Use window.print() and Save as PDF for high fidelity without jspdf
-    window.print();
-  };
-
   const handleAIFill = async () => {
     if (!activeBooking) {
-      alert('Por favor selecciona una reserva para autocompletar.');
+      addToast('Por favor selecciona una reserva para autocompletar.', 'info');
       return;
     }
 
     setIsAILoading(true);
     try {
-      // Prepare the "blank fields" format for Gemini based on current content
       const textToClean = docRef.current.innerHTML.replace(/<span.*?contenteditable="true">.*?<\/span>/g, '[CAMPO]');
       
       const systemPrompt = `Eres el asistente legal de Paradise Premium Rentals. Recibirás datos de una reserva en JSON y el texto de un contrato con campos marcados como [CAMPO]. Completa ÚNICAMENTE los campos marcados con los datos proporcionados. No cambies ninguna cláusula legal. Devuelve el texto completo del contrato con todos los campos completados. Si un dato no está disponible, déjalo como ___ para que el usuario lo complete manualmente.`;
@@ -267,20 +263,20 @@ export default function LegalManager() {
       const response = await result.response;
       const filledText = response.text();
 
-      // For this demo, we replace the content with the AI response
       setContent(filledText);
-      alert('¡Contrato completado por IA con éxito!');
+      addToast('¡Contrato completado por IA con éxito!');
     } catch (error) {
       console.error('AI Fill error:', error);
-      alert('Error al procesar con IA. Intenta de nuevo.');
+      addToast('Error al procesar con IA. Intenta de nuevo.', 'error');
     } finally {
       setIsAILoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!signatures.first || !signatures.second) {
-      alert('El documento debe estar firmado por ambas partes antes de guardar.');
+    const isSigned = signatures.first && (selectedDoc === 'entry' || signatures.second);
+    if (!isSigned) {
+      addToast('El documento debe estar firmado por ambas partes antes de guardar.', 'error');
       return;
     }
 
@@ -296,7 +292,7 @@ export default function LegalManager() {
         }]);
 
       if (error) throw error;
-      alert('Copia del contrato firmada guardada en el historial de la reserva.');
+      addToast('Copia del contrato firmada guardada en el historial de la reserva.');
     } catch (err) {
       console.error('Save error:', err);
       // Fallback for demo
