@@ -148,9 +148,9 @@ export default function PublishPage() {
 
   const manageQuota = () => {
     try {
-      const all = JSON.parse(localStorage.getItem('paradise_properties_v4') || '[]');
+      const all = JSON.parse(localStorage.getItem('paradise_properties_v5') || '[]');
       if (all.length > 60) {
-        localStorage.setItem('paradise_properties_v4', JSON.stringify(all.slice(0, 60)));
+        localStorage.setItem('paradise_properties_v5', JSON.stringify(all.slice(0, 60)));
       }
     } catch (e) {
       localStorage.clear();

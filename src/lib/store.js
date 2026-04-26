@@ -101,12 +101,24 @@ const storage = {
   get: () => new Promise(res => {
     setTimeout(() => {
       const data = localStorage.getItem(STORAGE_KEY);
-      res(data ? JSON.parse(data) : []);
+      if (data) {
+        res(JSON.parse(data));
+      } else {
+        // Migration from v4 if v5 is empty
+        const oldData = localStorage.getItem('paradise_properties_v4');
+        if (oldData) {
+          const parsed = JSON.parse(oldData);
+          localStorage.setItem(STORAGE_KEY, oldData);
+          res(parsed);
+        } else {
+          res([]);
+        }
+      }
     }, 0);
   }),
   set: (data) => new Promise(res => {
     setTimeout(() => {
-      // Lightening images to prevent QuotaExceededError
+      // Lightening images to prevent QuotaExceededError for storage
       const lightData = data.map(p => ({
         ...p,
         images: (p.images && p.images.length > 0) ? [p.images[0]] : []
@@ -118,30 +130,34 @@ const storage = {
 };
 
 export const getProperties = async () => {
+  const cached = await storage.get();
   const wasInitialized = localStorage.getItem(INIT_KEY);
-  if (!wasInitialized) {
+
+  // If no cached data and not initialized, show mocks
+  if (cached.length === 0 && !wasInitialized) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROPERTIES));
     localStorage.setItem(INIT_KEY, 'true');
     return INITIAL_PROPERTIES;
   }
 
-  const cached = await storage.get();
   const lastSync = parseInt(localStorage.getItem(SYNC_KEY) || '0', 10);
-  const CACHE_TTL = 5 * 60 * 1000;
+  const CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for better freshness
 
-  if (Date.now() - lastSync > CACHE_TTL || cached.length === 0) {
+  // Background sync if cache is stale or we have mock data
+  if (Date.now() - lastSync > CACHE_TTL || cached.some(p => p.isMock)) {
     supabase.from('properties')
       .select('*')
       .order('created_at', { ascending: false })
       .then(({data, error}) => {
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           storage.set(data);
           localStorage.setItem(SYNC_KEY, Date.now().toString());
+          localStorage.setItem(INIT_KEY, 'true');
         }
-      });
+      }).catch(err => console.warn('[Store] Background sync failed:', err));
   }
 
-  return cached;
+  return cached.length > 0 ? cached : INITIAL_PROPERTIES;
 };
 
 export const getProperty = async (id) => {
