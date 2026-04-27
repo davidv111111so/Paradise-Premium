@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProperties } from '../lib/store';
+import { getProperties, saveInventory, getInventory } from '../lib/store';
 import { 
   Plus, 
   Trash2, 
@@ -41,19 +41,23 @@ export default function InventoryManager() {
     setLoading(false);
   }
 
-  const openInventory = (property) => {
+  const openInventory = async (property) => {
     setSelectedProperty(property);
-    const saved = localStorage.getItem(`paradise_inventory_${property.id}`);
+    const saved = await getInventory(property.id);
     if (saved) {
-      setInventory(JSON.parse(saved));
+      setInventory(saved);
     } else {
       setInventory(DEFAULT_INVENTORY);
     }
   };
 
-  const saveInventory = () => {
-    localStorage.setItem(`paradise_inventory_${selectedProperty.id}`, JSON.stringify(inventory));
-    alert('Inventario guardado con éxito para ' + selectedProperty.title);
+  const handleSave = async () => {
+    try {
+      await saveInventory(selectedProperty.id, inventory);
+      alert('Inventario guardado con éxito para ' + selectedProperty.title);
+    } catch (e) {
+      alert('Error al guardar el inventario.');
+    }
   };
 
   const addItem = () => {
@@ -94,7 +98,7 @@ export default function InventoryManager() {
               </div>
             </div>
             <button 
-              onClick={saveInventory}
+              onClick={handleSave}
               className="px-6 py-3 bg-accent-500 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-accent-600 transition-all shadow-lg shadow-accent-500/20"
             >
               <Save size={18} /> Guardar Cambios

@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '../components/ToastProvider';
-import { 
-  FileText, 
-  PenTool, 
-  Download, 
-  Printer, 
-  Trash2, 
+import {
+  FileText,
+  PenTool,
+  Download,
+  Printer,
+  Trash2,
   CheckCircle2,
   User,
   ShieldCheck,
@@ -14,11 +14,15 @@ import {
   Share2,
   Clock,
   History,
-  Key
+  Key,
+  Type
 } from 'lucide-react';
 import RemoteSignModal from '../components/RemoteSignModal';
 import { geminiModel } from '../lib/gemini';
-import { supabase } from '../lib/supabase';
+import { getProperties, saveSignedContract } from '../lib/store';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import SignatureCanvas from '../components/SignatureCanvas';
 
 const MOCK_BOOKINGS = [
   { id: 'BK-782', guest: 'Juan Perez', property: 'Finca Villa del Sol', dates: '15/05/2026 - 20/05/2026', canon: '3.500.000', deposit: '450.000' },
@@ -35,13 +39,13 @@ const DOCUMENT_TEMPLATES = {
         <p style="font-size: 10px; color: #B8734A; letter-spacing: 2px; text-transform: uppercase;">Exclusividad y Gestión Patrimonial</p>
       </div>
 
-      <p><b>PARTES:</b> El PROPIETARIO, <span class="editable-field" contenteditable="true">____________________</span> con C.C. <span class="editable-field" contenteditable="true">____________________</span>, y el ADMINISTRADOR, <b>PARADISE PREMIUM RENTALS SAS</b>.</p>
+      <p><b>PARTES:</b> El PROPIETARIO, <span class="editable-field" contenteditable="true" data-field-id="owner_name">____________________</span> con C.C. <span class="editable-field" contenteditable="true" data-field-id="owner_id">____________________</span>, y el ADMINISTRADOR, <b>PARADISE PREMIUM RENTALS SAS</b>.</p>
 
-      <p><b>CLÁUSULA 1 - OBJETO:</b> Mandato comercial para la administración, promoción y comercialización del inmueble ubicado en <span class="editable-field" contenteditable="true">____________________</span> bajo la modalidad de vivienda turística.</p>
+      <p><b>CLÁUSULA 1 - OBJETO:</b> Mandato comercial para la administración, promoción y comercialización del inmueble ubicado en <span class="editable-field" contenteditable="true" data-field-id="property_address">____________________</span> bajo la modalidad de vivienda turística.</p>
 
       <p><b>CLÁUSULA 2 - ESTÁNDAR DE SERVICIO:</b> El ADMINISTRADOR garantiza un nivel de hospitalidad "Luxury", incluyendo limpieza profesional, gestión de canales (Airbnb, Booking, Directo) y asistencia 24/7 al huésped.</p>
 
-      <p><b>CLÁUSULA 3 - HONORARIOS:</b> Se pacta una comisión del <span class="editable-field" contenteditable="true">20%</span> sobre el valor bruto de reserva, descontando tasas de plataforma.</p>
+      <p><b>CLÁUSULA 3 - HONORARIOS:</b> Se pacta una comisión del <span class="editable-field" contenteditable="true" data-field-id="commission">20%</span> sobre el valor bruto de reserva, descontando tasas de plataforma.</p>
 
       <div style="margin-top: 100px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
         <div style="text-align: center;">
@@ -63,13 +67,13 @@ const DOCUMENT_TEMPLATES = {
         <h1 style="font-family: 'Playfair Display', serif; color: #1A4D2E; margin: 0;">CONTRATO DE HOSPEDAJE Y VIVIENDA TURÍSTICA</h1>
       </div>
 
-      <p><b>HUÉSPED RESPONSABLE:</b> <span class="editable-field" contenteditable="true">____________________</span> con ID <span class="editable-field" contenteditable="true">____________________</span>.</p>
+      <p><b>HUÉSPED RESPONSABLE:</b> <span class="editable-field" contenteditable="true" data-field-id="guest_name">____________________</span> con ID <span class="editable-field" contenteditable="true" data-field-id="guest_id">____________________</span>.</p>
       
-      <p><b>1. RESIDENCIA:</b> Entrega temporal de <span class="editable-field" contenteditable="true">____________________</span> desde el <span class="editable-field" contenteditable="true">____/____/____</span> hasta el <span class="editable-field" contenteditable="true">____/____/____</span>.</p>
+      <p><b>1. RESIDENCIA:</b> Entrega temporal de <span class="editable-field" contenteditable="true" data-field-id="property_name">____________________</span> desde el <span class="editable-field" contenteditable="true" data-field-id="check_in">____/____/____</span> hasta el <span class="editable-field" contenteditable="true" data-field-id="check_out">____/____/____</span>.</p>
 
       <p><b>2. PROTOCOLO DE CONVIVENCIA (Ley 1801):</b> Se prohíbe terminantemente el ruido excesivo entre las 10:00 PM y las 8:00 AM. El uso de bafles de alta potencia facultará la terminación inmediata sin lugar a reembolso.</p>
 
-      <p><b>3. DEPÓSITO DE SEGURIDAD:</b> El Huésped constituye un depósito de $<span class="editable-field" contenteditable="true">450.000</span> COP para cubrir posibles daños menores según el Menú de Transparencia de Paradise Premium.</p>
+      <p><b>3. DEPÓSITO DE SEGURIDAD:</b> El Huésped constituye un depósito de $<span class="editable-field" contenteditable="true" data-field-id="deposit">450.000</span> COP para cubrir posibles daños menores según el Menú de Transparencia de Paradise Premium.</p>
 
       <p><b>4. PROTECCIÓN AL MENOR:</b> En cumplimiento de la Ley 1336 de 2009, rechazamos la explotación sexual comercial de niños, niñas y adolescentes.</p>
 
@@ -92,7 +96,7 @@ const DOCUMENT_TEMPLATES = {
         <h1 style="font-family: 'Playfair Display', serif; color: #1A4D2E; margin: 0;">ACTA DE ENTREGA E INVENTARIO</h1>
       </div>
 
-      <p><b>PROPIEDAD:</b> <span class="editable-field" contenteditable="true">____________________</span> | <b>FECHA:</b> <span class="editable-field" contenteditable="true">____/____/2026</span></p>
+      <p><b>PROPIEDAD:</b> <span class="editable-field" contenteditable="true" data-field-id="property_name">____________________</span> | <b>FECHA:</b> <span class="editable-field" contenteditable="true" data-field-id="date">____/____/2026</span></p>
 
       <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px;">
         <thead>
@@ -131,14 +135,14 @@ const DOCUMENT_TEMPLATES = {
         <p style="font-size: 12px; color: #B8734A;">Para Edificios y Unidades Residenciales</p>
       </div>
 
-      <p><b>DIRIGIDO A:</b> Administración y Seguridad de <span class="editable-field" contenteditable="true">____________________</span>.</p>
-      <p><b>FECHA DE EMISIÓN:</b> <span class="editable-field" contenteditable="true">____/____/2026</span></p>
+      <p><b>DIRIGIDO A:</b> Administración y Seguridad de <span class="editable-field" contenteditable="true" data-field-id="building_name">____________________</span>.</p>
+      <p><b>FECHA DE EMISIÓN:</b> <span class="editable-field" contenteditable="true" data-field-id="issue_date">____/____/2026</span></p>
 
-      <p>Por medio de la presente, <b>PARADISE PREMIUM RENTALS</b>, en calidad de administrador del inmueble <span class="editable-field" contenteditable="true">Apto/Casa ____</span>, autoriza el ingreso de las siguientes personas para el periodo del <span class="editable-field" contenteditable="true">____/____</span> al <span class="editable-field" contenteditable="true">____/____</span>:</p>
+      <p>Por medio de la presente, <b>PARADISE PREMIUM RENTALS</b>, en calidad de administrador del inmueble <span class="editable-field" contenteditable="true" data-field-id="unit_number">Apto/Casa ____</span>, autoriza el ingreso de las siguientes personas para el periodo del <span class="editable-field" contenteditable="true" data-field-id="start_date">____/____</span> al <span class="editable-field" contenteditable="true" data-field-id="end_date">____/____</span>:</p>
 
       <ul style="background: #f9f9f9; padding: 20px; border-radius: 15px; list-style: none;">
-        <li><b>Titular:</b> <span class="editable-field" contenteditable="true">____________________</span> - CC: <span class="editable-field" contenteditable="true">____________________</span></li>
-        <li><b>Acompañantes:</b> <span class="editable-field" contenteditable="true">____________________</span></li>
+        <li><b>Titular:</b> <span class="editable-field" contenteditable="true" data-field-id="guest_name">____________________</span> - CC: <span class="editable-field" contenteditable="true" data-field-id="guest_id">____________________</span></li>
+        <li><b>Acompañantes:</b> <span class="editable-field" contenteditable="true" data-field-id="companions">____________________</span></li>
       </ul>
 
       <p>El titular de la reserva asume la responsabilidad total por el cumplimiento del reglamento interno de la propiedad horizontal.</p>
@@ -152,74 +156,7 @@ const DOCUMENT_TEMPLATES = {
   }
 };
 
-const SignatureCanvas = ({ onSave, label }) => {
-  const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-  }, []);
-
-  const startDrawing = (e) => {
-    const { offsetX, offsetY } = e.nativeEvent;
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(offsetX, offsetY);
-    setIsDrawing(true);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    const { offsetX, offsetY } = e.nativeEvent;
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.lineTo(offsetX, offsetY);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = () => {
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-  };
-
-  const handleApply = () => {
-    const dataUrl = canvasRef.current.toDataURL();
-    onSave(dataUrl);
-  };
-
-  return (
-    <div className="bg-white/5 p-4 rounded-3xl border border-white/10">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-[#B8734A] mb-3 flex items-center gap-2">
-        <PenTool size={12} /> {label}
-      </p>
-      <canvas
-        ref={canvasRef}
-        width={300}
-        height={120}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseOut={stopDrawing}
-        className="bg-white rounded-xl cursor-crosshair w-full"
-      />
-      <div className="flex gap-2 mt-3">
-        <button onClick={clearCanvas} className="flex-1 py-2 text-[10px] font-bold uppercase bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all">
-          Limpiar
-        </button>
-        <button onClick={handleApply} className="flex-1 py-2 text-[10px] font-bold uppercase bg-[#1A4D2E] text-white rounded-lg hover:bg-[#1A4D2E]/80 transition-all">
-          Aplicar
-        </button>
-      </div>
-    </div>
-  );
-};
+// Shared SignatureCanvas is now imported
 
 export default function LegalManager({ selectedRes = null }) {
   const { addToast } = useToast();
@@ -242,7 +179,15 @@ export default function LegalManager({ selectedRes = null }) {
   };
 
   const injectSignature = (idx, dataUrl) => {
-    setSignatures(prev => ({ ...prev, [idx === 0 ? 'first' : 'second']: dataUrl }));
+    setSignatures(prev => {
+      const next = { ...prev, [idx === 0 ? 'first' : 'second']: dataUrl };
+      if (next.first && (selectedDoc === 'entry' || next.second)) {
+        setContractStatus('SIGNED');
+      } else if (next.first || next.second) {
+        setContractStatus('PENDING');
+      }
+      return next;
+    });
   };
 
   const handleAIFill = async () => {
@@ -253,17 +198,42 @@ export default function LegalManager({ selectedRes = null }) {
 
     setIsAILoading(true);
     try {
-      const textToClean = docRef.current.innerHTML.replace(/<span.*?contenteditable="true">.*?<\/span>/g, '[CAMPO]');
-      
-      const systemPrompt = `Eres el asistente legal de Paradise Premium Rentals. Recibirás datos de una reserva en JSON y el texto de un contrato con campos marcados como [CAMPO]. Completa ÚNICAMENTE los campos marcados con los datos proporcionados. No cambies ninguna cláusula legal. Devuelve el texto completo del contrato con todos los campos completados. Si un dato no está disponible, déjalo como ___ para que el usuario lo complete manualmente.`;
-      
-      const userPrompt = `Datos de la reserva: ${JSON.stringify(activeBooking)}\n\nContrato:\n${textToClean}`;
+      const fields = Array.from(docRef.current.querySelectorAll('.editable-field')).map(el => ({
+        id: el.getAttribute('data-field-id'),
+        text: el.previousSibling?.textContent?.trim() || 'Campo'
+      }));
+
+      const systemPrompt = `Eres el asistente legal de Paradise Premium Rentals. Recibirás datos de una reserva en JSON y una lista de IDs de campos de un contrato. 
+      Devuelve ÚNICAMENTE un objeto JSON donde las llaves sean los data-field-id y los valores sean los datos extraídos de la reserva. 
+      Si un dato no está en la reserva, intenta inferirlo basándote en el contexto (ej. el administrador es Paradise Premium Rentals SAS) o usa "____________________". 
+      Mapeos comunes: 
+      - owner_name/owner_id: Propietario (si no está, dejar vacío).
+      - guest_name/guest_id: Huésped.
+      - property_name/property_address: Propiedad.
+      - check_in/check_out/dates: Fechas.
+      - canon/deposit: Valores monetarios.
+      Asegúrate de que las fechas estén en formato DD/MM/AAAA.`;
+
+      const userPrompt = `Datos de la reserva: ${JSON.stringify(activeBooking)}\nCampos a completar: ${JSON.stringify(fields)}`;
 
       const result = await geminiModel.generateContent([systemPrompt, userPrompt]);
       const response = await result.response;
-      const filledText = response.text();
+      const text = response.text();
 
-      setContent(filledText);
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found in response");
+
+      const data = JSON.parse(jsonMatch[0]);
+
+      Object.entries(data).forEach(([id, value]) => {
+        const el = docRef.current.querySelector(`[data-field-id="${id}"]`);
+        if (el) {
+          el.textContent = value;
+          el.style.backgroundColor = 'transparent';
+          el.style.borderBottom = '1px solid #1A4D2E';
+        }
+      });
+
       addToast('¡Contrato completado por IA con éxito!');
     } catch (error) {
       console.error('AI Fill error:', error);
@@ -273,6 +243,45 @@ export default function LegalManager({ selectedRes = null }) {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    addToast('Generando PDF de alta fidelidad...', 'info');
+    try {
+      const element = docRef.current;
+      // Temporarily add a container class for better capture
+      element.classList.add('pdf-capture-mode');
+      
+      const canvas = await html2canvas(element, {
+        scale: 3, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 800 // Consistent width for PDF
+      });
+      
+      element.classList.remove('pdf-capture-mode');
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.save(`Paradise_${selectedDoc}_${activeBooking?.id || 'doc'}.pdf`);
+      addToast('¡PDF descargado con éxito!');
+    } catch (err) {
+      console.error('PDF Error:', err);
+      addToast('Error al generar el PDF.', 'error');
+    }
+  };
+
+  const handleResetSignatures = () => {
+    setSignatures({ first: null, second: null });
+    setContractStatus('NOT_SET');
+    addToast('Firmas reiniciadas.', 'info');
+  };
+
+
+
   const handleSave = async () => {
     const isSigned = signatures.first && (selectedDoc === 'entry' || signatures.second);
     if (!isSigned) {
@@ -281,22 +290,22 @@ export default function LegalManager({ selectedRes = null }) {
     }
 
     try {
-      const { error } = await supabase
-        .from('signed_contracts')
-        .insert([{
-          booking_id: activeBooking?.id || 'manual',
-          doc_type: selectedDoc,
-          content: docRef.current.innerHTML,
-          signatures: signatures,
-          created_at: new Date()
-        }]);
+      await saveSignedContract({
+        booking_id: activeBooking?.id || 'manual',
+        doc_type: selectedDoc,
+        content: docRef.current.innerHTML,
+        signatures: signatures,
+        status: 'SIGNED',
+        audit: {
+          timestamp: new Date().toISOString(),
+          agent: 'Paradise AI System'
+        }
+      });
 
-      if (error) throw error;
       addToast('Copia del contrato firmada guardada en el historial de la reserva.');
     } catch (err) {
       console.error('Save error:', err);
-      // Fallback for demo
-      alert('Copia guardada en el historial (Simulación)');
+      addToast('Error al guardar. Datos salvados localmente.', 'warning');
     }
   };
 
@@ -310,7 +319,7 @@ export default function LegalManager({ selectedRes = null }) {
             <CheckCircle2 className="text-[#B8734A]" size={18} />
             Vincular Reserva
           </h3>
-          <select 
+          <select
             onChange={(e) => setActiveBooking(MOCK_BOOKINGS.find(b => b.id === e.target.value))}
             className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-paradise-200 focus:border-[#B8734A] focus:outline-none"
           >
@@ -340,7 +349,7 @@ export default function LegalManager({ selectedRes = null }) {
                   <CheckCircle2 size={20} />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 animate-pulse">
+                <div className={`w-10 h-10 rounded-full ${contractStatus === 'PENDING' ? 'bg-orange-500/20 text-orange-500 animate-pulse' : 'bg-white/5 text-paradise-500'} flex items-center justify-center`}>
                   <Clock size={20} />
                 </div>
               )}
@@ -349,12 +358,12 @@ export default function LegalManager({ selectedRes = null }) {
                   {contractStatus === 'SIGNED' ? 'Firmado Digitalmente ✅' : contractStatus === 'PENDING' ? 'Pendiente de firma ⏳' : 'Sin iniciar'}
                 </p>
                 <p className="text-[10px] opacity-60 text-paradise-400">
-                  {contractStatus === 'SIGNED' ? '15/05/2026 — 14:20' : 'Esperando huêsped'}
+                  {contractStatus === 'SIGNED' ? new Date().toLocaleString() : 'Esperando huêsped'}
                 </p>
               </div>
             </div>
             {contractStatus === 'PENDING' && (
-              <span className="text-[10px] font-bold text-orange-500 uppercase">24h rest.</span>
+              <span className="text-[10px] font-bold text-orange-500 uppercase">En proceso</span>
             )}
           </div>
         </section>
@@ -369,11 +378,10 @@ export default function LegalManager({ selectedRes = null }) {
               <button
                 key={id}
                 onClick={() => setSelectedDoc(id)}
-                className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left ${
-                  selectedDoc === id
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left ${selectedDoc === id
                     ? 'bg-[#1A4D2E]/20 border-[#1A4D2E] text-[#B8734A] shadow-lg'
                     : 'bg-white/5 border-white/10 text-paradise-400 hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedDoc === id ? 'bg-[#1A4D2E] text-white' : 'bg-white/5'}`}>
                   {id === 'admin' && <Briefcase size={18} />}
@@ -391,12 +399,11 @@ export default function LegalManager({ selectedRes = null }) {
         </section>
 
         {/* AI Action */}
-        <button 
+        <button
           onClick={handleAIFill}
           disabled={isAILoading}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all ${
-            isAILoading ? 'bg-paradise-900 opacity-50' : 'bg-gradient-to-r from-[#1A4D2E] to-[#256a40] text-white shadow-xl hover:scale-[1.02]'
-          }`}
+          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all ${isAILoading ? 'bg-paradise-900 opacity-50' : 'bg-gradient-to-r from-[#1A4D2E] to-[#256a40] text-white shadow-xl hover:scale-[1.02]'
+            }`}
         >
           <Sparkles size={18} className={isAILoading ? 'animate-pulse' : 'animate-bounce'} />
           {isAILoading ? 'Procesando...' : '✨ Autocompletar con IA'}
@@ -404,61 +411,71 @@ export default function LegalManager({ selectedRes = null }) {
 
         {/* Signature Module */}
         <section className="glass-card p-6 rounded-[32px] border-white/5 space-y-4">
-          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <PenTool className="text-[#B8734A]" size={18} />
-            Firmas Digitales
-          </h3>
-          <SignatureCanvas 
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <PenTool className="text-[#B8734A]" size={18} />
+              Firmas Digitales
+            </h3>
+            {(signatures.first || signatures.second) && (
+              <button 
+                onClick={handleResetSignatures}
+                className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 uppercase font-bold tracking-widest"
+              >
+                <Trash2 size={12} /> Reiniciar
+              </button>
+            )}
+          </div>
+          <SignatureCanvas
             label={
-              selectedDoc === 'admin' ? 'Firma Propietario' : 
-              selectedDoc === 'rent' ? 'Firma Huésped' : 
-              selectedDoc === 'inventory' ? 'Firma Entrega (Staff)' : 
-              'Firma Administrador'
-            } 
-            onSave={(url) => injectSignature(0, url)} 
+              selectedDoc === 'admin' ? 'Firma Propietario' :
+                selectedDoc === 'rent' ? 'Firma Huésped' :
+                  selectedDoc === 'inventory' ? 'Firma Entrega (Staff)' :
+                    'Firma Administrador'
+            }
+            onSave={(url) => injectSignature(0, url)}
           />
           {selectedDoc !== 'entry' && (
-            <SignatureCanvas 
+            <SignatureCanvas
               label={
-                selectedDoc === 'admin' ? 'Firma Administrador' : 
-                selectedDoc === 'rent' ? 'Firma Arrendador' : 
-                'Firma Recibe (Huésped)'
-              } 
-              onSave={(url) => injectSignature(1, url)} 
+                selectedDoc === 'admin' ? 'Firma Administrador' :
+                  selectedDoc === 'rent' ? 'Firma Arrendador' :
+                    'Firma Recibe (Huésped)'
+              }
+              onSave={(url) => injectSignature(1, url)}
             />
           )}
         </section>
 
         {/* Global Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button 
+          <button
             onClick={() => setIsRemoteModalOpen(true)}
             className="col-span-2 flex items-center justify-center gap-3 py-5 bg-[#B8734A] text-white rounded-2xl text-xs font-bold uppercase tracking-[0.2em] shadow-2xl shadow-[#B8734A]/30 hover:scale-[1.02] transition-all mb-2"
           >
             <Share2 size={16} /> Enviar para Firma
           </button>
-          <button 
+          <button
             onClick={handleSave}
             className="flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-emerald-500/20"
           >
             <CheckCircle2 size={14} /> Guardar
           </button>
-          <button 
-            onClick={handlePrint}
+          <button
+            onClick={handleDownloadPDF}
             className="flex items-center justify-center gap-2 py-4 bg-[#1A4D2E] text-white border border-[#1A4D2E] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-[#1A4D2E]/20"
           >
-            <Download size={14} /> Descargar para Impresión
+            <Download size={14} /> Descargar PDF Premium
           </button>
-          <button 
+          <button
             onClick={handlePrint}
             className="flex items-center justify-center gap-2 py-4 bg-white/5 text-white border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
           >
-            <Printer size={14} /> Vista Previa
+            <Printer size={14} /> Imprimir Directo
           </button>
         </div>
 
         {/* Remote Sign Modal */}
-        <RemoteSignModal 
+        <RemoteSignModal
           isOpen={isRemoteModalOpen}
           onClose={() => setIsRemoteModalOpen(false)}
           contractData={{
@@ -477,10 +494,10 @@ export default function LegalManager({ selectedRes = null }) {
             <img src="/assets/logoparadise.png" alt="Logo" className="h-20" />
           </div>
 
-          <div 
+          <div
             ref={docRef}
             className="legal-visor text-black font-serif leading-relaxed"
-            style={{ 
+            style={{
               color: '#333',
               fontSize: '14px',
               maxWidth: '800px',
@@ -488,10 +505,23 @@ export default function LegalManager({ selectedRes = null }) {
             }}
           >
             {/* Document Content */}
-            <div 
-              dangerouslySetInnerHTML={{ __html: content }} 
+            <div dangerouslySetInnerHTML={{ __html: content }}
               className="prose prose-slate max-w-none"
             />
+
+            {/* Audit Trail Section */}
+            <div className="mt-20 pt-8 border-t border-gray-100 text-[10px] text-gray-400 uppercase tracking-[0.2em] grid grid-cols-2 gap-8 print:mt-10">
+              <div>
+                <p className="font-bold text-gray-600 mb-1">Certificación Digital</p>
+                <p><b>ID:</b> {activeBooking?.id || 'MANUAL-DOC'}</p>
+                <p><b>Hash:</b> {btoa(content).substring(0, 32)}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-gray-600 mb-1">Registro Paradise</p>
+                <p><b>Fecha:</b> {new Date().toLocaleDateString()}</p>
+                <p><b>Estado:</b> {signatures.first && signatures.second ? 'FIRMADO' : 'PENDIENTE'}</p>
+              </div>
+            </div>
 
             {/* Injected Signatures Layer (Overlay) */}
             <style>{`
@@ -538,13 +568,19 @@ export default function LegalManager({ selectedRes = null }) {
 
             {/* Portal-like injection for signatures */}
             {signatures.first && (
-              <PortalSignature target={selectedDoc === 'admin' ? '#sign-placeholder-owner' : selectedDoc === 'rent' ? '#sign-placeholder-lessor' : '#sign-placeholder-delivery'}>
-                <img src={signatures.first} alt="Firma 1" style={{ maxHeight: '80px' }} />
+              <PortalSignature
+                target={selectedDoc === 'admin' ? '#sign-placeholder-owner' : selectedDoc === 'rent' ? '#sign-placeholder-lessor' : '#sign-placeholder-delivery'}
+                trigger={content}
+              >
+                <img src={signatures.first} alt="Firma 1" style={{ maxHeight: '80px', margin: '0 auto' }} />
               </PortalSignature>
             )}
             {signatures.second && (
-              <PortalSignature target={selectedDoc === 'admin' ? '#sign-placeholder-admin' : selectedDoc === 'rent' ? '#sign-placeholder-tenant' : '#sign-placeholder-receive'}>
-                <img src={signatures.second} alt="Firma 2" style={{ maxHeight: '80px' }} />
+              <PortalSignature
+                target={selectedDoc === 'admin' ? '#sign-placeholder-admin' : selectedDoc === 'rent' ? '#sign-placeholder-tenant' : '#sign-placeholder-receive'}
+                trigger={content}
+              >
+                <img src={signatures.second} alt="Firma 2" style={{ maxHeight: '80px', margin: '0 auto' }} />
               </PortalSignature>
             )}
           </div>
@@ -558,13 +594,17 @@ export default function LegalManager({ selectedRes = null }) {
 }
 
 // Helper to render signatures into placeholders in the HTML string
-const PortalSignature = ({ children, target }) => {
+const PortalSignature = ({ children, target, trigger }) => {
   const [targetEl, setTargetEl] = useState(null);
 
   useEffect(() => {
-    const el = document.querySelector(target);
-    if (el) setTargetEl(el);
-  }, [target]);
+    // Small delay to ensure dangerouslySetInnerHTML has rendered
+    const timeout = setTimeout(() => {
+      const el = document.querySelector(target);
+      setTargetEl(el);
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [target, trigger]);
 
   if (!targetEl) return null;
 

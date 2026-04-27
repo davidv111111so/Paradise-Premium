@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Calculator, Loader2, Calendar } from 'lucide-react';
+import { TrendingUp, Calculator, Loader2, Calendar, Star } from 'lucide-react';
 
 // Simulated RENTAL market data by neighborhood in Medellín (Monthly prices)
 const MARKET_DATA = {

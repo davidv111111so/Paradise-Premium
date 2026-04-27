@@ -1,1 +1,0 @@
-Columns: id, created_at, title, price, location, neighborhood, description, category, videoUrl, bedrooms, bathrooms, area_m2, capacity, amenities, images, status, isMock

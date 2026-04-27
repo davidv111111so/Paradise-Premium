@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { storage } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Upload, ImagePlus, Loader2, CheckCircle2, AlertCircle, Palette, Sparkles } from 'lucide-react';
 import { getModel } from '../lib/gemini';
 
@@ -74,16 +75,10 @@ export default function VirtualStaging() {
         let publicUrl = '';
         try {
           const fileName = `staging/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          const { data, error: uploadError } = await supabase.storage
-            .from('property-images')
-            .upload(fileName, file, { contentType: file.type });
-
-          if (uploadError) throw uploadError;
-
-          const { data: urlData } = supabase.storage
-            .from('property-images')
-            .getPublicUrl(data.path);
-          publicUrl = urlData.publicUrl;
+          const storageRef = ref(storage, fileName);
+          
+          await uploadBytes(storageRef, file);
+          publicUrl = await getDownloadURL(storageRef);
         } catch (storageErr) {
           console.warn('Storage upload failed, using local fallback:', storageErr);
           publicUrl = URL.createObjectURL(file);
