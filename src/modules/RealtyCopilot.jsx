@@ -3,7 +3,7 @@
 // --------------------------------------------------------
 import { useState, useRef, useEffect } from 'react';
 import { getModel } from '../lib/gemini';
-import { supabase } from '../lib/supabase';
+import { getProperties } from '../lib/store';
 import ChatBubble from '../components/ChatBubble';
 import PropertyCard from '../components/PropertyCard';
 import { Send, Loader2, Bot } from 'lucide-react';
@@ -69,33 +69,25 @@ Responde SOLO con el JSON.`;
         filters = JSON.parse(filtersText);
       } catch (parseErr) {
         console.error('Extraction parse error:', parseErr, 'Raw text:', filtersText);
-        // Fallback to empty filters if JSON is malformed
         filters = {};
       }
 
-      // Step 2: Query Supabase with extracted filters
-      let dbQuery = supabase.from('properties').select('*').eq('status', 'available');
+      // Step 2: Query Firebase
+      const allProperties = await getProperties();
+      
+      const filtered = allProperties.filter(p => {
+        if (filters.category && p.category !== filters.category) return false;
+        if (filters.max_price && p.price > filters.max_price) return false;
+        if (filters.min_price && p.price < filters.min_price) return false;
+        if (filters.neighborhood && !p.neighborhood?.toLowerCase().includes(filters.neighborhood.toLowerCase())) return false;
+        if (filters.city && !p.location?.toLowerCase().includes(filters.city.toLowerCase())) return false;
+        if (filters.bedrooms && p.bedrooms < filters.bedrooms) return false;
+        if (filters.pet_friendly === true && !p.pet_friendly) return false;
+        if (filters.min_area && p.area_m2 < filters.min_area) return false;
+        return true;
+      }).slice(0, 6);
 
-      // Category mapping (ensure it matches store.js)
-      if (filters.category) {
-        let cat = filters.category;
-        if (cat === 'water_vehicle' || cat === 'boat') cat = 'vehicle';
-        dbQuery = dbQuery.eq('category', cat);
-      }
-      if (filters.max_price) dbQuery = dbQuery.lte('price', filters.max_price);
-      if (filters.min_price) dbQuery = dbQuery.gte('price', filters.min_price);
-      if (filters.neighborhood)
-        dbQuery = dbQuery.ilike('neighborhood', `%${filters.neighborhood}%`);
-      if (filters.city) dbQuery = dbQuery.ilike('location', `%${filters.city}%`);
-      if (filters.bedrooms) dbQuery = dbQuery.gte('bedrooms', filters.bedrooms);
-      if (filters.pet_friendly === true) dbQuery = dbQuery.eq('pet_friendly', true);
-      if (filters.min_area) dbQuery = dbQuery.gte('area_m2', filters.min_area);
-
-      dbQuery = dbQuery.order('created_at', { ascending: false }).limit(6);
-
-      const { data, error } = await dbQuery;
-
-      if (error) throw error;
+      const data = filtered;
 
       // Step 3: Generate a conversational response
       const filterSummary = Object.entries(filters)

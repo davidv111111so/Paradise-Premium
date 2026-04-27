@@ -9,7 +9,8 @@ import {
   Loader2,
   ExternalLink
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { createPendingContract } from '../lib/store';
+import { ShieldCheck } from 'lucide-react';
 
 export default function RemoteSignModal({ isOpen, onClose, contractData }) {
   const [method, setMethod] = useState(null);
@@ -22,22 +23,15 @@ export default function RemoteSignModal({ isOpen, onClose, contractData }) {
   const generateLink = async () => {
     setLoading(true);
     try {
-      // Create a pending contract record in Supabase
-      const { data, error } = await supabase
-        .from('pending_contracts')
-        .insert([{
-          title: contractData.title,
-          content: contractData.content,
-          guest_name: contractData.guest_name || 'Huésped',
-          status: 'PENDIENTE',
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
-        }])
-        .select()
-        .single();
+      const id = await createPendingContract({
+        title: contractData.title,
+        content: contractData.content,
+        guest_name: contractData.guest_name || 'Huésped',
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
+      });
 
-      if (error) throw error;
-      setContractId(data.id);
-      return `${window.location.origin}/sign/${data.id}`;
+      setContractId(id);
+      return `${window.location.origin}/sign/${id}`;
     } catch (err) {
       console.error('Error generating link:', err);
       // Fallback for demo

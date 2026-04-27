@@ -19,7 +19,6 @@ import ValuationAI from '../modules/ValuationAI';
 import FinancialCalculator from '../modules/FinancialCalculator';
 import InventoryManager from '../modules/InventoryManager';
 import LegalManager from '../modules/LegalManager';
-import { supabase } from '../lib/supabase';
 import { isAuthorized } from '../lib/store';
 import PartnerAuthModal from '../components/PartnerAuthModal';
 import { useOutletContext } from 'react-router-dom';
@@ -27,19 +26,30 @@ import { useOutletContext } from 'react-router-dom';
 export default function AICenterPage() {
   const { lang, t } = useOutletContext();
   const [activeTab, setActiveTab] = useState('staging');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('paradise_admin_auth') === 'true';
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(() => {
+    return localStorage.getItem('paradise_admin_auth') !== 'true';
+  });
 
   const onConfirmAuth = (rawEmail) => {
-    setIsAuthModalOpen(false);
     if (isAuthorized(rawEmail)) {
       setIsAdmin(true);
+      setIsAuthModalOpen(false);
+      localStorage.setItem('paradise_admin_auth', 'true');
     } else {
       alert(lang === 'es' 
         ? 'Acceso restringido. Solo socios autorizados.' 
         : 'Restricted access. Authorized partners only.');
       window.location.href = '/';
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('paradise_admin_auth');
+    setIsAdmin(false);
+    setIsAuthModalOpen(true);
   };
 
   const TABS = [
@@ -69,6 +79,14 @@ export default function AICenterPage() {
               Herramientas inteligentes para propietarios y agentes.
             </p>
           </div>
+          {isAdmin && (
+            <button 
+              onClick={handleLogout}
+              className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-paradise-500 hover:text-red-400 hover:bg-red-400/5 transition-all text-[10px] font-black uppercase tracking-widest"
+            >
+              <Lock size={12} /> Salir
+            </button>
+          )}
         </div>
       </div>
 
